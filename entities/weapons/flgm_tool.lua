@@ -123,7 +123,7 @@ function SWEP:PrimaryAttack()
 			if ( SERVER ) then
 				trace.Entity:Remove()
 				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
-				local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
+				local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
 				--print(Nav)
 				if IsValid(Nav) or Nav ~= nil then
 					local RandPoint = Nav:GetRandomPoint()
