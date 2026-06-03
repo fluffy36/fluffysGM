@@ -102,7 +102,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     prop:SetPos(RandPoint+Vector(0,0,2000))
                     prop:Spawn()
                     timer.Simple(0.5, function()
-                        prop:ApplyForceCenter(Vector(0,0,-100)*prop:GetMass())
+                        prop:ApplyForceCenter(Vector(0,0,-9999))
                     end)
                 elseif ent == "npc_helicopter" then
                     local prop = ents.Create("npc_helicopter")
