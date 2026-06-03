@@ -15,6 +15,7 @@ function ENT:Initialize()
         self:PhysicsInit(SOLID_VPHYSICS)
         self:SetSolid(SOLID_VPHYSICS)
         self:SetMaterial("debug/debugempty.vtf")
+        self:Wake()
 
     end
 
