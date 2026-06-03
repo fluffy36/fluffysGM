@@ -117,7 +117,7 @@ function SWEP:PrimaryAttack()
 			trace.Entity:SetColor(Color(math.Rand(0, 255),math.Rand(0, 255),math.Rand(0, 255)))
 		elseif Str[1]=="flgm" and Str[2]=="corruptedprop" then
 			self:EmitSound("")
-			CorruptedPropsAmount += 1
+			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			trace.Entity:Remove()
 		end
     end
