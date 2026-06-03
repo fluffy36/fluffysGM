@@ -17,7 +17,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     
     local sun = ents.FindByClass("sun_light")
     
-    
+
 
     local owner = Ply
 
@@ -44,7 +44,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         table.insert(Models, table.Count(Models)-1, v)
     end
 
-    local Ents = {"gmod_light","prop_vehicle_jeep","prop_vehicle_jeep_old","prop_vehicle_airboat","prop_vehicle_prisoner_pod"}
+    local Ents = {"gmod_light","flgm_corruptedprop","prop_vehicle_airboat","prop_vehicle_prisoner_pod"}
 
 
     local PropSpawnRate = 10
@@ -74,7 +74,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
             local RandInt = math.random(1, 2)
             if RandInt == 1 then
                 local RandPoint = Nav:GetRandomPoint()
-                local model = Models[math.random(0, table.Count(Models))]
+                local model = Models[math.random(1, table.Count(Models))]
                 --print(model)
 
                 local prop = ents.Create("prop_physics")
@@ -83,12 +83,24 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                 prop:Spawn()
             elseif RandInt == 2 then
                 local RandPoint = Nav:GetRandomPoint()
-                local ent = Ents[math.random(0, table.Count(Ents))]
-                --print(model)
+                local ent = Ents[math.random(1, table.Count(Ents))]
+                print(ent)
 
-                local prop = ents.Create(ent)
-                prop:SetPos(RandPoint+Vector(0,0,2000))
-                prop:Spawn()
+                if ent == "prop_vehicle_airboat" then
+                    local prop = ents.Create("prop_vehicle_airboat")
+                    prop:SetModel("models/airboat.mdl")
+                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:Spawn()
+                elseif ent == "prop_vehicle_prisoner_pod" then
+                    local prop = ents.Create("prop_vehicle_prisoner_pod")
+                    prop:SetModel("models/vehicles/prisoner_pod.mdl")
+                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:Spawn()
+                else
+                    local prop = ents.Create(ent)
+                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:Spawn()
+                end
             end
             
         else
