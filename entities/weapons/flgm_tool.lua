@@ -122,6 +122,7 @@ function SWEP:PrimaryAttack()
 			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			if ( SERVER ) then
 				trace.Entity:Remove()
+				self:GetOwner():SetHealth(self:GetOwner():Health()+10)
 			end
 		end
     end
