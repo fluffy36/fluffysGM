@@ -139,8 +139,6 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                 local spawnData = Ents[math.random(1, #Ents)]
                 if not spawnData then return end
 
-                print("Spawning Global Chaos Object: " .. spawnData.class)
-
                 local spawnClass = spawnData.class
                 local objType = spawnData.type
                 local item
