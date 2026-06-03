@@ -121,7 +121,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
         
         if IsValid(Nav) then
-            local RandInt = math.random(1, 2)
+            local RandInt = math.random(1, 3)
             local RandPoint = Nav:GetRandomPoint()
             
             -- ACTION 1: Spawn a Random Model/Prop from the client spawnlists
@@ -164,7 +164,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                                 item:SetKeyValue(k, v)
                             end
                         end
-                        item:SetPos(RandPoint + Vector(0, 0, 100))
+                        item:SetPos(RandPoint + Vector(0, 0, 5000))
                         item:Spawn()
                         item:Activate()
                     end
@@ -181,8 +181,15 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     item = ents.Create(spawnClass)
                     if IsValid(item) then
                         if spawnData.model then item:SetModel(spawnData.model) end
-                        item:SetPos(RandPoint + Vector(0, 0, 500))
+                        item:SetPos(RandPoint + Vector(0, 0, 5000))
                         item:Spawn()
+                    end
+                elseif RandInt == 3 then
+                    local prop = ents.Create("flgm_corruptedprop")
+                    if IsValid(prop) then
+                        prop:SetModel(chosenModel)
+                        prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
+                        prop:Spawn()
                     end
                 end
             end
