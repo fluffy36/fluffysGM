@@ -1,0 +1,7 @@
+"Fluffy's gamemode"
+{
+	"title"		"Fluffy's gamemode"
+	"base"		"base"
+	"maps"		"gm_construct"
+	"menusystem"		"1"
+}
