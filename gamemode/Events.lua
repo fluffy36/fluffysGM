@@ -89,17 +89,17 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                 if ent == "prop_vehicle_airboat" then
                     local prop = ents.Create("prop_vehicle_airboat")
                     prop:SetModel("models/airboat.mdl")
-                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:SetPos(RandPoint+Vector(0,0,20))
                     prop:Spawn()
                 elseif ent == "prop_vehicle_prisoner_pod" then
                     local prop = ents.Create("prop_vehicle_prisoner_pod")
                     prop:SetModel("models/vehicles/prisoner_pod.mdl")
-                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:SetPos(RandPoint+Vector(0,0,20))
                     prop:Spawn()
                 elseif ent == "flgm_corruptedprop" then
                     local prop = ents.Create("flgm_corruptedprop")
                     prop:SetModel("models/vehicles/prisoner_pod.mdl")
-                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:SetPos(RandPoint+Vector(0,0,20))
                     prop:Spawn()
                     timer.Simple(0.5, function()
                         prop:ApplyForceCenter(Vector(0,0,-9999))
@@ -111,7 +111,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     prop:Activate()
                 else
                     local prop = ents.Create(ent)
-                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:SetPos(RandPoint+Vector(0,0,20))
                     prop:Spawn()
                 end
             end
