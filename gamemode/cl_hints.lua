@@ -63,3 +63,14 @@ GM:AddHint( "OpeningMenu", 30 )
 -- Tell them how to turn the hints off after 1 minute
 GM:AddHint( "Annoy1", 5 )
 GM:AddHint( "Annoy2", 7 )
+ 
+
+
+
+
+
+
+
+
+
+-- fluffy smells like tastes like looks like a booger
