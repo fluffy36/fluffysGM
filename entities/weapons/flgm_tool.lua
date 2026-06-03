@@ -133,7 +133,7 @@ function SWEP:PrimaryAttack()
 				end
 			end
 		else
-			self:EmitSound("friends/message.wav")
+			trace.Entity:EmitSound("friends/message.wav")
 			if ( SERVER ) then
 				trace.Entity:Remove()
 				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
