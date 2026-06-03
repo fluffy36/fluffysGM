@@ -23,7 +23,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     local Models = {}
     local Ents = {}
 
-    -- 1. Scrape every registered SENT (Scripted Entity)
+    -- 1. Scrape every registered SENT (Scripted Entity) b
     for class, _ in pairs(scripted_ents.GetList()) do
         if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" then
             table.insert(Ents, { type = "entity", class = class })
