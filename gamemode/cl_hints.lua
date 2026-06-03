@@ -73,4 +73,4 @@ GM:AddHint( "Annoy2", 7 )
 
 
 
--- fluffy smells like tastes like looks like a booger
+-- LAIR

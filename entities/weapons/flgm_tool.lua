@@ -112,13 +112,17 @@ function SWEP:PrimaryAttack()
     local Str = string.Split(trace.Entity:GetClass(), "_")
     --PrintTable(Str)
     if Str[1]=="flgm" or Str[1]=="prop" then
-        trace.Entity:EmitSound("friends/friend_online.wav")
+		if Str[1]~="flgm" and Str[2]~="corruptedprop" then
+        	trace.Entity:EmitSound("friends/friend_online.wav")
+		end
 		if Str[1]=="prop"then
 			trace.Entity:SetColor(Color(math.Rand(0, 255),math.Rand(0, 255),math.Rand(0, 255)))
 		elseif Str[1]=="flgm" and Str[2]=="corruptedprop" then
-			self:EmitSound("")
+			self:EmitSound("resource/warning.wav")
 			CorruptedPropsAmount = CorruptedPropsAmount + 1
-			trace.Entity:Remove()
+			if ( SERVER ) then
+				trace.Entity:Remove()
+			end
 		end
     end
 
