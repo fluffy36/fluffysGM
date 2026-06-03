@@ -122,7 +122,17 @@ function SWEP:PrimaryAttack()
 			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			if ( SERVER ) then
 				trace.Entity:Remove()
-				self:GetOwner():SetHealth(self:GetOwner():Health()+10)
+				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+				local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
+				--print(Nav)
+				if IsValid(Nav) or Nav ~= nil then
+					local RandPoint = Nav:GetRandomPoint()
+					Weapons = {"weapon_crowbar","weapon_physcannon","weapon_pistol","weapon_smg1","weapon_357","weapon_shotgun","weapon_crossbow","weapon_rpg"}
+
+					local wpn =  ents.Create(Weapons[math.random(1, table.Count(Weapons))])
+					wpn:SetPos(RandPoint+Vector(0,0,500))
+					wpn:Spawn()
+				end
 			end
 		end
     end
