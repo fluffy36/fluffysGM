@@ -6,11 +6,19 @@ concommand.Add("flgm_restart_events", function(ply)
     hook.Run("PlayerInitialSpawn", ply)
 end)
 
+concommand.Add("flgm_find_sun", function(ply)
+    local sun = ents.FindByClass("env_sun")
+    sun[1]:Fire("LightOn")
+end)
+
 hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     if EventStart then return end
     EventStart = true
     
+    local sun = ents.FindByClass("sun_light")
     
+    
+
     local owner = Ply
 
     local Props_c17 = {"models/props_c17/awning001a.mdl", "models/props_c17/awning002a.mdl", "models/props_c17/bench01a.mdl", "models/props_c17/briefcase001a.mdl", "models/props_c17/canister01a.mdl", "models/props_c17/canister02a.mdl", "models/props_c17/canisterchunk01a.mdl", "models/props_c17/canisterchunk01b.mdl", "models/props_c17/canisterchunk01c.mdl", "models/props_c17/canisterchunk01d.mdl", "models/props_c17/canisterchunk01f.mdl", "models/props_c17/canisterchunk01g.mdl", "models/props_c17/canisterchunk01h.mdl", "models/props_c17/canisterchunk01i.mdl", "models/props_c17/canisterchunk01k.mdl", "models/props_c17/canisterchunk01l.mdl", "models/props_c17/canisterchunk01m.mdl", "models/props_c17/canisterchunk02a.mdl", "models/props_c17/canisterchunk02b.mdl", "models/props_c17/canisterchunk02c.mdl", "models/props_c17/canisterchunk02d.mdl", "models/props_c17/canisterchunk02e.mdl", "models/props_c17/canisterchunk02f.mdl", "models/props_c17/canisterchunk02g.mdl", "models/props_c17/canisterchunk02h.mdl", "models/props_c17/canisterchunk02i.mdl", "models/props_c17/canisterchunk02j.mdl", "models/props_c17/canisterchunk02k.mdl", "models/props_c17/canisterchunk02l.mdl", "models/props_c17/canisterchunk02m.mdl", "models/props_c17/canister_propane01a.mdl", "models/props_c17/cashregister01a.mdl", "models/props_c17/chair02a.mdl", "models/props_c17/chair_kleiner03a.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/chair_stool01a.mdl", "models/props_c17/clock01.mdl", "models/props_c17/column02a.mdl", "models/props_c17/computer01_keyboard.mdl", "models/props_c17/concrete_barrier001a.mdl", "models/props_c17/consolebox01a.mdl", "models/props_c17/consolebox03a.mdl", "models/props_c17/consolebox05a.mdl", "models/props_c17/display_cooler01a.mdl", "models/props_c17/doll01.mdl", "models/props_c17/door01_left.mdl", "models/props_c17/door02_double.mdl", "models/props_c17/fence01a.mdl", "models/props_c17/fence01b.mdl", "models/props_c17/fence02a.mdl", "models/props_c17/fence02b.mdl", "models/props_c17/fence03a.mdl", "models/props_c17/fence04a.mdl", "models/props_c17/fountain_01.mdl", "models/props_c17/frame002a.mdl", "models/props_c17/furniturearmchair001a.mdl", "models/props_c17/furniturebathtub001a.mdl", "models/props_c17/furniturebed001a.mdl", "models/props_c17/furnitureboiler001a.mdl", "models/props_c17/furniturechair001a.mdl", "models/props_c17/furniturechair001a_chunk01.mdl", "models/props_c17/furniturechair001a_chunk02.mdl", "models/props_c17/furniturechair001a_chunk03.mdl", "models/props_c17/furniturecouch001a.mdl", "models/props_c17/furniturecouch002a.mdl", "models/props_c17/furniturecupboard001a.mdl", "models/props_c17/furnituredrawer001a.mdl", "models/props_c17/furnituredrawer001a_chunk01.mdl", "models/props_c17/furnituredrawer001a_chunk02.mdl", "models/props_c17/furnituredrawer001a_chunk03.mdl", "models/props_c17/furnituredrawer001a_chunk04.mdl", "models/props_c17/furnituredrawer001a_chunk05.mdl", "models/props_c17/furnituredrawer001a_chunk06.mdl", "models/props_c17/furnituredrawer001a_shard01.mdl", "models/props_c17/furnituredrawer002a.mdl", "models/props_c17/furnituredrawer003a.mdl", "models/props_c17/furnituredresser001a.mdl", "models/props_c17/furniturefireplace001a.mdl", "models/props_c17/furniturefridge001a.mdl", "models/props_c17/furnituremattress001a.mdl", "models/props_c17/furniturepipecluster001a.mdl", "models/props_c17/furnitureradiator001a.mdl", "models/props_c17/furnitureshelf001a.mdl", "models/props_c17/furnitureshelf001b.mdl", "models/props_c17/furnitureshelf002a.mdl", "models/props_c17/furnituresink001a.mdl", "models/props_c17/furniturestove001a.mdl", "models/props_c17/furnituretable001a.mdl", "models/props_c17/furnituretable002a.mdl", "models/props_c17/furnituretable003a.mdl", "models/props_c17/furnituretoilet001a.mdl", "models/props_c17/furniturewashingmachine001a.mdl", "models/props_c17/gasmeter001a.mdl", "models/props_c17/gasmeter002a.mdl", "models/props_c17/gasmeter003a.mdl", "models/props_c17/gasmeterpipes001a.mdl", "models/props_c17/gasmeterpipes002a.mdl", "models/props_c17/gaspipes001a.mdl", "models/props_c17/gaspipes002a.mdl", "models/props_c17/gaspipes003a.mdl", "models/props_c17/gaspipes004a.mdl", "models/props_c17/gaspipes005a.mdl", "models/props_c17/gaspipes006a.mdl", "models/props_c17/gate_door01a.mdl", "models/props_c17/gate_door02a.mdl", "models/props_c17/gravestone001a.mdl", "models/props_c17/gravestone002a.mdl", "models/props_c17/gravestone003a.mdl", "models/props_c17/gravestone004a.mdl", "models/props_c17/gravestone_coffinpiece001a.mdl", "models/props_c17/gravestone_coffinpiece002a.mdl", "models/props_c17/gravestone_cross001a.mdl", "models/props_c17/gravestone_cross001b.mdl", "models/props_c17/gravestone_statue001a.mdl", "models/props_c17/grinderclamp01a.mdl", "models/props_c17/handrail04_brokencorner.mdl", "models/props_c17/handrail04_brokenlong.mdl", "models/props_c17/handrail04_brokensinglerise.mdl", "models/props_c17/handrail04_cap.mdl", "models/props_c17/handrail04_corner.mdl", "models/props_c17/handrail04_doublerise.mdl", "models/props_c17/handrail04_end.mdl", "models/props_c17/handrail04_long.mdl", "models/props_c17/handrail04_medium.mdl", "models/props_c17/handrail04_short.mdl", "models/props_c17/handrail04_singlerise.mdl", "models/props_c17/lamp001a.mdl", "models/props_c17/lampfixture01a.mdl", "models/props_c17/lamppost03a_off.mdl", "models/props_c17/lamppost03a_off_dynamic.mdl", "models/props_c17/lamppost03a_on.mdl", "models/props_c17/lampshade001a.mdl", "models/props_c17/lamp_bell_on.mdl", "models/props_c17/lamp_standard_off01.mdl", "models/props_c17/light_cagelight01_off.mdl", "models/props_c17/light_cagelight01_on.mdl", "models/props_c17/light_cagelight02_off.mdl", "models/props_c17/light_cagelight02_on.mdl", "models/props_c17/light_decklight01_off.mdl", "models/props_c17/light_decklight01_on.mdl", "models/props_c17/light_domelight01_off.mdl", "models/props_c17/light_domelight02_off.mdl", "models/props_c17/light_domelight02_on.mdl", "models/props_c17/light_floodlight02_off.mdl", "models/props_c17/light_industrialbell01_on.mdl", "models/props_c17/light_magnifyinglamp02.mdl", "models/props_c17/lockers001a.mdl", "models/props_c17/metalladder001.mdl", "models/props_c17/metalladder002.mdl", "models/props_c17/metalladder002b.mdl", "models/props_c17/metalladder003.mdl", "models/props_c17/metalpot001a.mdl", "models/props_c17/metalpot002a.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/oildrum001_explosive.mdl", "models/props_c17/oildrumchunk01a.mdl", "models/props_c17/oildrumchunk01b.mdl", "models/props_c17/oildrumchunk01c.mdl", "models/props_c17/oildrumchunk01d.mdl", "models/props_c17/oildrumchunk01e.mdl", "models/props_c17/overhaingcluster_001a.mdl", "models/props_c17/overpass_001a.mdl", "models/props_c17/overpass_001b.mdl", "models/props_c17/paper01.mdl", "models/props_c17/pillarcluster_001a.mdl", "models/props_c17/pillarcluster_001b.mdl", "models/props_c17/pillarcluster_001c.mdl", "models/props_c17/pillarcluster_001d.mdl", "models/props_c17/pillarcluster_001f.mdl", "models/props_c17/pipe_cap003.mdl", "models/props_c17/pipe_cap005.mdl", "models/props_c17/pipe_cap005c.mdl", "models/props_c17/playgroundslide01.mdl", "models/props_c17/playgroundtick-tack-toe_block01a.mdl", "models/props_c17/playgroundtick-tack-toe_post01.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/playground_jungle_gym01a.mdl", "models/props_c17/playground_jungle_gym01b.mdl", "models/props_c17/playground_swingset01.mdl", "models/props_c17/playground_swingset_seat01a.mdl", "models/props_c17/playground_teetertoter_seat.mdl", "models/props_c17/playground_teetertoter_stan.mdl", "models/props_c17/pulleyhook01.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_c17/pulleywheels_small01.mdl", "models/props_c17/pushbroom.mdl", "models/props_c17/shelfunit01a.mdl", "models/props_c17/signpole001.mdl", "models/props_c17/statue_horse.mdl", "models/props_c17/streetsign001c.mdl", "models/props_c17/streetsign002b.mdl", "models/props_c17/streetsign003b.mdl", "models/props_c17/streetsign004e.mdl", "models/props_c17/streetsign004f.mdl", "models/props_c17/streetsign005b.mdl", "models/props_c17/streetsign005c.mdl", "models/props_c17/streetsign005d.mdl", "models/props_c17/substation_circuitbreaker01a.mdl", "models/props_c17/substation_stripebox01a.mdl", "models/props_c17/substation_transformer01a.mdl", "models/props_c17/substation_transformer01b.mdl", "models/props_c17/substation_transformer01c.mdl", "models/props_c17/substation_transformer01d.mdl", "models/props_c17/substation_transformer01e.mdl", "models/props_c17/suitcase001a.mdl", "models/props_c17/suitcase_passenger_physics.mdl", "models/props_c17/support01.mdl", "models/props_c17/tools_pliers01a.mdl", "models/props_c17/tools_wrench01a.mdl", "models/props_c17/traffic_light001a.mdl", "models/props_c17/trappropeller_blade.mdl", "models/props_c17/trappropeller_engine.mdl", "models/props_c17/trappropeller_lever.mdl", "models/props_c17/trap_crush01a.mdl", "models/props_c17/truss02a.mdl", "models/props_c17/truss02c.mdl", "models/props_c17/truss02d.mdl", "models/props_c17/truss02e.mdl", "models/props_c17/truss02f.mdl", "models/props_c17/truss02g.mdl", "models/props_c17/truss02h.mdl", "models/props_c17/truss03a.mdl", "models/props_c17/truss03b.mdl", "models/props_c17/tv_monitor01.mdl", "models/props_c17/tv_monitor01_screen.mdl", "models/props_c17/utilityconducter001.mdl", "models/props_c17/utilityconnecter002.mdl", "models/props_c17/utilityconnecter003.mdl", "models/props_c17/utilityconnecter005.mdl", "models/props_c17/utilityconnecter006.mdl", "models/props_c17/utilityconnecter006b.mdl", "models/props_c17/utilityconnecter006c.mdl", "models/props_c17/utilityconnecter006d.mdl", "models/props_c17/utilitypole01a.mdl", "models/props_c17/utilitypole01b.mdl", "models/props_c17/utilitypole01d.mdl", "models/props_c17/utilitypole02b.mdl", "models/props_c17/utilitypole03a.mdl", "models/props_c17/utilitypolemount01a.mdl"}
@@ -36,6 +44,9 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         table.insert(Models, table.Count(Models)-1, v)
     end
 
+    local Ents = {"gmod_light","prop_vehicle_jeep","prop_vehicle_jeep_old","prop_vehicle_airboat","prop_vehicle_prisoner_pod"}
+
+
     local PropSpawnRate = 10
     concommand.Add("flgm_PropSpawnRate", function(ply)
         
@@ -60,16 +71,26 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
         --print(Nav)
         if IsValid(Nav) or Nav ~= nil then
+            local RandInt = math.random(1, 2)
+            if RandInt == 1 then
+                local RandPoint = Nav:GetRandomPoint()
+                local model = Models[math.random(0, table.Count(Models))]
+                --print(model)
 
-            local RandPoint = Nav:GetRandomPoint()
-            local model = Models[math.random(0, table.Count(Models))]
-            --print(model)
+                local prop = ents.Create("prop_physics")
+                prop:SetModel(model)
+                prop:SetPos(RandPoint+Vector(0,0,2000))
+                prop:Spawn()
+            elseif RandInt == 2 then
+                local RandPoint = Nav:GetRandomPoint()
+                local ent = Ents[math.random(0, table.Count(Ents))]
+                --print(model)
 
-            local prop = ents.Create("prop_physics")
-            prop:SetModel(model)
-            prop:SetPos(RandPoint+Vector(0,0,2000))
-            prop:Spawn()
-
+                local prop = ents.Create(ent)
+                prop:SetPos(RandPoint+Vector(0,0,2000))
+                prop:Spawn()
+            end
+            
         else
             print("let us in...")
         end
