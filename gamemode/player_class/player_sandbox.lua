@@ -63,7 +63,7 @@ function PLAYER:Loadout()
 	self.Player:Give( "flgm_tool" )
 	self.Player:Give( "none" )
 	self.Player:Give( "weapon_crowbar" )
-	self.Player:Give( "weapon_physcannon" )
+	self.Player:Give( "weapon_physgun" )
 
 	self.Player:SwitchToDefaultWeapon()
 
