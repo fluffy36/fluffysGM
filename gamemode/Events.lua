@@ -44,7 +44,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         table.insert(Models, table.Count(Models)-1, v)
     end
 
-    local Ents = {"gmod_light","flgm_corruptedprop","prop_vehicle_airboat","prop_vehicle_prisoner_pod"}
+    local Ents = {"gmod_light","flgm_corruptedprop","prop_vehicle_airboat","prop_vehicle_prisoner_pod","npc_helicopter"}
 
 
     local PropSpawnRate = 10
@@ -71,7 +71,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
         --print(Nav)
         if IsValid(Nav) or Nav ~= nil then
-            local RandInt = math.random(1, 2)
+            local RandInt = math.random(1, 4)
             if RandInt == 1 then
                 local RandPoint = Nav:GetRandomPoint()
                 local model = Models[math.random(1, table.Count(Models))]
@@ -96,6 +96,12 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     prop:SetModel("models/vehicles/prisoner_pod.mdl")
                     prop:SetPos(RandPoint+Vector(0,0,2000))
                     prop:Spawn()
+                elseif ent == "flgm_corruptedprop" then
+                    local prop = ents.Create("flgm_corruptedprop")
+                    prop:SetModel("models/vehicles/prisoner_pod.mdl")
+                    prop:SetPos(RandPoint+Vector(0,0,2000))
+                    prop:Spawn()
+                    prop:ApplyForceCenter(Vector(0,0,-100)*prop:GetMass())
                 else
                     local prop = ents.Create(ent)
                     prop:SetPos(RandPoint+Vector(0,0,2000))
