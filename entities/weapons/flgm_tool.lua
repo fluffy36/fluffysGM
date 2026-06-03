@@ -115,7 +115,7 @@ function SWEP:PrimaryAttack()
 		if Str[1]~="flgm" and Str[2]~="corruptedprop" then
         	trace.Entity:EmitSound("friends/friend_online.wav")
 		end
-		if Str[1]=="flgm" and Str[2]=="corruptedprop" then
+		if Str[2]=="corruptedprop" then
 			self:EmitSound("resource/warning.wav")
 			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			if ( SERVER ) then
