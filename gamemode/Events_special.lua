@@ -1,4 +1,4 @@
-AddCSLuaFile("fluffysgm/entities/weapons/flgm_tool.lua")
+AddCSLuaFile("../entities/weapons/flgm_tool.lua")
 
 
 concommand.Add("flgm_checkcorruptedpropsamount", function()
