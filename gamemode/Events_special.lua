@@ -1,5 +1,5 @@
 
 
 concommand.Add("flgm_checkcorruptedpropsamount", function()
-    print(GAMEMODE.CorruptedPropsAmount)
+    print(_G.CorruptedPropsAmount)
 end)

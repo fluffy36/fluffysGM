@@ -17,9 +17,6 @@ SWEP.WorldModel		= "models/weapons/w_toolgun.mdl"
 
 SWEP.UseHands = true
 
-util.PrecacheModel( SWEP.ViewModel )
-util.PrecacheModel( SWEP.WorldModel )
-
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 SWEP.Primary.Automatic = false
@@ -117,7 +114,7 @@ function SWEP:PrimaryAttack()
 		end
 		if Str[2]=="corruptedprop" then
 			self:EmitSound("resource/warning.wav",0)
-			GAMEMODE.CorruptedPropsAmount = GAMEMODE.CorruptedPropsAmount + 1
+			_G.CorruptedPropsAmount = _G.CorruptedPropsAmount + 1
 			if ( SERVER ) then
 				trace.Entity:Remove()
 				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
