@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 
 ENT.PrintName = "err0126"
-ENT.Author = "Lenny/Fluffy"
+ENT.Author = "Lenny"
 ENT.Category = "Fluffy's gamemode"
 ENT.Spawnable = true
 
@@ -47,7 +47,7 @@ if ( SERVER ) then
         effectData:SetOrigin(currentPos)
         effectData:SetScale(2) 
         effectData:SetMagnitude(3) 
-        util.Effect("Sparks", effectData)
+        util.Effect("Sparks", effectData, true)
         
         timer.Simple(0, function()
             if GM_REMOVING_ALL then return end
