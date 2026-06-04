@@ -199,7 +199,7 @@ hook.Add("Tick", "", function()
 		GoalOnGoing = true
 
 		print(Pos)
-		local Nav = navmesh.GetNearestNavArea(Pos, false, 10000, true, true)
+		local Nav = navmesh.GetNearestNavArea(Pos, false, 1000000, true, true)
 
 		if IsValid(Nav) then
 
@@ -222,7 +222,7 @@ hook.Add("flgm_GoalReached", "flgm_GoalReached", function(ply,purpose,pos)
 		local Reward = ents.Create("flgm_terminal")
 		Reward:SetPos(pos+Vector(0,0,50))
 		Reward:Spawn()
-
+		self:GetOwner():ChatPrint("A quest has started...")
 		GoalOnGoing = false
 	end
 
