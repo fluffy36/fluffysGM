@@ -45,7 +45,8 @@ if ( SERVER ) then
         effectData:SetOrigin(currentPos)
         effectData:SetScale(2) 
         effectData:SetMagnitude(3) 
-        util.Effect("Sparks", effectData)
+        util.Effect("Sparks", effectData, true)
+        --util.Effect(effectName, effectData, allowOverride=true)
         
         local clone1 = ents.Create(self:GetClass())
         if IsValid(clone1) then
