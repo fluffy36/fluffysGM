@@ -25,6 +25,7 @@ include( 'commands.lua' )
 include( 'player.lua' )
 include( 'spawnmenu/init.lua' )
 include("Events.lua")
+include("Events_special.lua")
 
 --
 -- Make BaseClass available
