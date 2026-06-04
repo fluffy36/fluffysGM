@@ -183,6 +183,10 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                 if IsValid(prop) then
                     prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
                     prop:Spawn()
+                    local Physicsobj = prop:GetPhysicsObject()
+                    if IsValid(Physicsobj) then
+                        Physicsobj:Wake()
+                    end
                 end
             end
             
