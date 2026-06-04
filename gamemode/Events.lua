@@ -22,7 +22,6 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     
     local Models = {}
     local Ents = {}
-    local GAMEMODE.SpawnedEnts = {}
 
     -- 1. Scrape every registered SENT (Scripted Entity) b
     for class, _ in pairs(scripted_ents.GetList()) do
