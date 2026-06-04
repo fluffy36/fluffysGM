@@ -186,6 +186,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     local Physicsobj = prop:GetPhysicsObject()
                     if IsValid(Physicsobj) then
                         Physicsobj:Wake()
+                        Physicsobj:ApplyForceCenter(Vector(0, 0, -10))
                     end
                 end
             end
