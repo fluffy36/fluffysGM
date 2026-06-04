@@ -56,6 +56,7 @@ if SERVER then
         ["Door Base"] = true,
         ["beam"] = true,
         ["logic_achievement"] = true,
+        ["Event goal"] = true,
         ["logic_active_autosave"] = true,
         ["logic_auto"] = true,
         ["logic_autosave"] = true,
