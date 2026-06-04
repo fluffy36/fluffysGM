@@ -137,7 +137,7 @@ function SWEP:PrimaryAttack()
 					end
 				end
 			elseif Str[2]=="evilcorruptedcube" then
-				self:EmitSound("buttons/blip01.wav",0)
+				self:EmitSound("buttons/blip1.wav",0)
 				
 				if ( SERVER ) then
 					trace.Entity:Remove()
