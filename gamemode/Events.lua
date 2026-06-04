@@ -169,8 +169,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                         item:SetPos(RandPoint + Vector(0, 0, 1500))
                         item:Spawn()
                     end
-
-                elseif -- Default dynamic handling for typical SENTS/Entities
+                else -- Default dynamic handling for typical SENTS/Entities
                     item = ents.Create(spawnClass)
                     if IsValid(item) then
                         if spawnData.model then item:SetModel(spawnData.model) end
