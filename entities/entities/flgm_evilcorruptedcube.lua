@@ -41,6 +41,12 @@ if ( SERVER ) then
         local currentAng = self:GetAngles()
         
         
+        local effectData = EffectData()
+        effectData:SetOrigin(currentPos)
+        effectData:SetScale(2) 
+        effectData:SetMagnitude(3) 
+        util.Effect("Sparks", effectData)
+        
         local clone1 = ents.Create(self:GetClass())
         if IsValid(clone1) then
             clone1:SetPos(currentPos + Vector(math.random(-15, 15), math.random(-15, 15), 10))
