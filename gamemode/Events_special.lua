@@ -1,6 +1,5 @@
-net.Receive("CorruptedPropsAmount", function()
-    local CorruptedPropsAmount = net.ReadFloat()
-end)
+include("entities/weapons/flgm_tool.lua")
+
 
 concommand.Add("flgm_checkcorruptedpropsamount", function()
     print(CorruptedPropsAmount)

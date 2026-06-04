@@ -32,7 +32,7 @@ SWEP.Secondary.Ammo = "none"
 
 SWEP.HoldType = "revolver"
 
-local flgm_CorruptedPropsAmount = CreateConVar("flgm_CorruptedPropsAmount",0,FCVAR_ARCHIVE,"dont use this please")
+
 
 function SWEP:Initialize()
     self:SetHoldType( self.HoldType )
@@ -42,9 +42,7 @@ end
 
 
 function SWEP:Deploy()
-    if !GetConVar("flgm_CorruptedPropsAmount") then
-		local flgm_CorruptedPropsAmount = CreateConVar("flgm_CorruptedPropsAmount",0,FCVAR_ARCHIVE,"dont use this please")
-	end
+    
 end
 
 -- The shoot effect
@@ -118,23 +116,13 @@ function SWEP:PrimaryAttack()
         	trace.Entity:EmitSound("friends/friend_online.wav")
 		end
 		if Str[2]=="corruptedprop" then
-
-			net.Receive("CorruptedPropsAmount", function()
-				local CorruptedPropsAmount = net.ReadFloat()
-			end)
 			self:EmitSound("resource/warning.wav",0)
-			net.Start("CorruptedPropsAmount")
-			net.WriteFloat(CorruptedPropsAmount)
-			net.Broadcast()
-
+			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			if ( SERVER ) then
-				
 				trace.Entity:Remove()
 				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
-
 				local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
 				--print(Nav)
-
 				if IsValid(Nav) or Nav ~= nil then
 					local RandPoint = Nav:GetRandomPoint()
 					Weapons = {"weapon_crowbar","weapon_physcannon","weapon_pistol","weapon_smg1","weapon_357","weapon_shotgun","weapon_crossbow","weapon_rpg"}
@@ -143,10 +131,9 @@ function SWEP:PrimaryAttack()
 					wpn:SetPos(RandPoint+Vector(0,0,500))
 					wpn:Spawn()
 				end
-
 			end
 		end
-    elseif !trace.Entity:IsWorld() then
+    elseif trace.Entity:IsWorld() then
 		trace.Entity:EmitSound("friends/message.wav",0)
 		if ( SERVER ) then
 			trace.Entity:Remove()
