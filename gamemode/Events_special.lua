@@ -1,4 +1,6 @@
-local CorruptedPropsAmount = GetConVar("flgm_CorruptedPropsAmount")
+net.Receive("CorruptedPropsAmount", function()
+    local CorruptedPropsAmount = net.ReadFloat()
+end)
 
 concommand.Add("flgm_checkcorruptedpropsamount", function()
     print(CorruptedPropsAmount)
