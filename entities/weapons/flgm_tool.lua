@@ -28,7 +28,7 @@ SWEP.Secondary.Automatic = false
 SWEP.Secondary.Ammo = "none"
 
 SWEP.HoldType = "revolver"
-CorruptedPropsAmount = 0
+local CorruptedPropsAmount = 0
 
 
 function SWEP:Initialize()
