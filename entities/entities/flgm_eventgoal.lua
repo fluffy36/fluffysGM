@@ -13,7 +13,7 @@ function ENT:Initialize()
 
         -- Set a default model if none is provided before Spawn()
         if not self:GetModel() or self:GetModel() == "" then
-            self:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+            self:SetModel("models/props_phx/misc/egg.mdl")
         end
         
         self:PhysicsInit(SOLID_VPHYSICS)
