@@ -4,45 +4,51 @@
 if SERVER then
     util.AddNetworkString("FLGM_UpdateQuestUI")
 
-    -- Configuration variables
-    local QuestActive = true
-    local TargetCorruptionColor = Color(255, 0, 0, 255) -- Crimson Corrupted Red
-    local TargetCorruptionMaterial = "models/debug/debugwhite" -- Smooth unshaded texture for neon effect
+    -- Global Quest State Tracker
+    FLGM_ActiveQuest = {
+        Active = false,
+        TargetEnt = nil,
+        TargetName = "None",
+        CorruptedDeleted = 0,
+        CurrentPlayer = nil
+    }
 
     ---------------------------------------------------------
     -- CORRUPTION MONITOR & VISUAL PATCHER
     ---------------------------------------------------------
-    -- Constantly checks for active event props, transforms them, and prunes stale data
-    timer.Create("FLGM_QuestPropProcessor", 0.5, 0, function()
-        if not QuestActive then return end
+    local DynamicRewardsList = {}
 
-        local currentEventCount = 0
-        local allProps = ents.FindByClass("prop_physics")
+    local function ScrapeRewardRegistry()
+        DynamicRewardsList = {} -- Reset
 
-        for _, prop in ipairs(allProps) do
-            if IsValid(prop) and prop.IsEventsLuaProp then
-                currentEventCount = currentEventCount + 1
+        -- 1. Grab all Scripted Entities (SENTS)
+        for class, _ in pairs(scripted_ents.GetList()) do
+            if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" then
+                table.insert(DynamicRewardsList, { type = "entity", class = class })
+            end
+        end
 
-                -- If the prop hasn't been visually corrupted yet, apply the effects
-                if not prop.IsCorruptedVisualApplied then
-                    prop:SetColor(TargetCorruptionColor)
-                    prop:SetMaterial(TargetCorruptionMaterial)
-                    prop:DrawShadow(false) -- Makes it look like it's glowing slightly
-                    
-                    -- Optional: add a slight red dynamic glow around it
-                    local glow = ents.Create("env_sprite")
-                    if IsValid(glow) then
-                        glow:SetKeyValue("model", "sprites/light_glow01.vmt")
-                        glow:SetKeyValue("rendercolor", "255 0 0")
-                        glow:SetKeyValue("renderamt", "200")
-                        glow:SetKeyValue("modelscale", "1.5")
-                        glow:SetPos(prop:WorldSpaceCenter())
-                        glow:SetParent(prop)
-                        glow:Spawn()
-                    end
+        -- 2. Grab Sandbox Entities List
+        local spawnableEntities = list.Get("SpawnableEntities")
+        if spawnableEntities then
+            for class, _ in pairs(spawnableEntities) do
+                table.insert(DynamicRewardsList, { type = "entity", class = class })
+            end
+        end
 
-                    prop.IsCorruptedVisualApplied = true
-                end
+        -- 3. Grab NPCs
+        local npcList = list.Get("NPC")
+        if npcList then
+            for class, info in pairs(npcList) do
+                table.insert(DynamicRewardsList, { type = "npc", class = class, model = info.Model })
+            end
+        end
+
+        -- 4. Grab Vehicles
+        local vehicleList = list.Get("Vehicles")
+        if vehicleList then
+            for class, info in pairs(vehicleList) do
+                table.insert(DynamicRewardsList, { type = "vehicle", class = class, model = info.Model, keyvalues = info.KeyValues })
             end
         end
 
@@ -59,10 +65,19 @@ if SERVER then
     ---------------------------------------------------------
     -- DESTRUCTION & PROGRESSION HOOK
     ---------------------------------------------------------
-    -- Fires whenever an entity takes damage; catches when players destroy event props
-    hook.Add("EntityTakeDamage", "FLGM_TrackQuestDestruction", function(target, dmginfo)
-        if not QuestActive then return end
-        if not IsValid(target) or target:GetClass() ~= "prop_physics" then return end
+    local function StartRandomQuest(ply)
+        if #DynamicRewardsList == 0 then ScrapeRewardRegistry() end
+
+        -- Gather every single physical entity, npc, or prop currently alive in the world
+        local allMapEntities = ents.GetAll()
+        local validTargets = {}
+
+        for _, ent in ipairs(allMapEntities) do
+            -- Filter out world geometry, players, and the quest-starting props themselves
+            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
+                table.insert(validTargets, ent)
+            end
+        end
 
         -- Verify if this was an explicit event item from events.lua
         if target.IsEventsLuaProp then
