@@ -194,13 +194,11 @@ hook.Add("Tick", "", function()
 	
 
 	if CorruptedPropsAmount >= 10 and !Challange1Started then
-		print(CorruptedPropsAmount)
-		Challange1Started = true
 		GoalOnGoing = true
-
-		print(Pos)
-		local Nav = navmesh.GetNearestNavArea(Pos, false, 1000000, true, true)
-
+		
+		self:GetOwner():PrintMessage(HUD_PRINTTALK, "A quest has started")
+		local NavR = navmesh.GetNavArea(Pos, -500)
+		local Nav = NavR[math.random(1, table.Count(NavR))]
 		if IsValid(Nav) then
 
 			local RandPoint = Nav:GetRandomPoint()
@@ -209,7 +207,10 @@ hook.Add("Tick", "", function()
 			Goal:SetPos(RandPoint+Vector(0,0,100))
 			Goal.purpose = "test"
 			Goal:Spawn()
+			Challange1Started = true
 			
+		else
+			return
 		end
 
 	end
