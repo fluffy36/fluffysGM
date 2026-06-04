@@ -566,10 +566,10 @@ if SERVER then
                     end
 
                     FLGM_ActiveQuest.CorruptedDeleted = FLGM_ActiveQuest.CorruptedDeleted + 1
-                    local remaining = 10 - FLGM_ActiveQuest.CorruptedDeleted
+                    local remaining = 5 - FLGM_ActiveQuest.CorruptedDeleted
 
                     if remaining > 0 then
-                        ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/10) Destroy " .. remaining .. " more to activate quest.")
+                        ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/5) Destroy " .. remaining .. " more to activate quest.")
                     else
                         ply:ChatPrint("[Quest Engine] Critical threshold met! Initializing world tracking matrix...")
                         StartRandomQuest(ply)
