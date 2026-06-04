@@ -46,7 +46,8 @@ function ENT:Use(activator, caller, useType, value)
 
         local ply = activator
         local purpose = self.purpose
-        hook.Call("flgm_GoalReached", nil, ply , purpose)
+        local pos = self:GetPos()
+        hook.Call("flgm_GoalReached", nil, ply , purpose, pos)
 
     end
 end

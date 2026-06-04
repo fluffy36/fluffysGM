@@ -183,7 +183,7 @@ hook.Add("Tick", "", function()
 	--do your stuff in here
 	
 
-	if CorruptedPropsAmount >= 5 and !Challange1Started then
+	if CorruptedPropsAmount >= 10 and !Challange1Started then
 		print(CorruptedPropsAmount)
 		Challange1Started = true
 		GoalOnGoing = true
@@ -206,11 +206,11 @@ hook.Add("Tick", "", function()
 
 end)
 
-hook.Add("flgm_GoalReached", "flgm_GoalReached", function(ply,purpose)
+hook.Add("flgm_GoalReached", "flgm_GoalReached", function(ply,purpose,pos)
 
 	if purpose == "test" then
 		local Reward = ents.Create("flgm_terminal")
-		Reward:SetPos(ply:GetPos()+Vector(0,0,100))
+		Reward:SetPos(pos+Vector(0,0,50))
 		Reward:Spawn()
 
 		GoalOnGoing = false
