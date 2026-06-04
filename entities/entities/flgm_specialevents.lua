@@ -88,7 +88,7 @@ if SERVER then
 
         for _, ent in ipairs(allMapEntities) do
             -- Filter out world geometry, players, and the quest-starting props themselves
-            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
+            if util.IsValidProp(ent:GetModel()) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
                 table.insert(validTargets, ent)
             end
         end
