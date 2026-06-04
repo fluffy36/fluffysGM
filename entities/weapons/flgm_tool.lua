@@ -188,14 +188,11 @@ hook.Add("Tick", "", function()
 		if IsValid(Nav) then
 
 			local RandPoint = Nav:GetRandomPoint()
-			print(RandPoint+Vector(0,0,100))
 			local Goal = ents.Create("flgm_eventgoal")
-			if IsValid(Goal) then
-				Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
-				Goal:SetPos(RandPoint+Vector(0,0,100))
-				Goal.purpose = "test"
-				Goal:Spawn()
-			end
+			Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
+			Goal:SetPos(RandPoint+Vector(0,0,100))
+			Goal.purpose = "test"
+			Goal:Spawn()
 			
 		end
 

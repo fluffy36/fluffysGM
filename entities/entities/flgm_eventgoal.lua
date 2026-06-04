@@ -3,7 +3,7 @@ ENT.PrintName = "Event goal"
 ENT.Author = "Fluffy"
 ENT.Base = "base_gmodentity"
 ENT.Category = "Fluffy's gamemode"
-ENT.Spawnable = false
+ENT.Spawnable = true
 
 
 
