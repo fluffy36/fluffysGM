@@ -1,6 +1,7 @@
 if SERVER then
     AddCSLuaFile()
 
+    -- Global Quest State Tracker
     FLGM_ActiveQuest = {
         Active = false,
         TargetEnt = nil,
@@ -9,96 +10,136 @@ if SERVER then
         CurrentPlayer = nil
     }
 
+    ---------------------------------------------------------
+    -- QUEST TARGET / REWARD BLACKLIST
+    ---------------------------------------------------------
+    -- Add any class names or model path snippets here to completely ignore them
+    local QuestBlacklist = {
+        ["gmod_light"] = true,
+        ["hint"] = true,
+        ["light"] = true,
+        ["gmod_light"] = true,
+        -- Example of blacklisting specific utility types or entities:
+        ["edit_sun"] = true,
+        ["shadow_control"] = true,
+    }
+
+    ---------------------------------------------------------
+    -- AUTOMATED GLOBAL SPAWNMENU REGISTRY SCRAPER (No Props)
+    ---------------------------------------------------------
     local DynamicRewardsList = {}
 
     local function ScrapeRewardRegistry()
-        DynamicRewardsList = {}
-        
+        DynamicRewardsList = {} -- Reset
+
+        -- 1. Grab all Scripted Entities (SENTS)
         for class, _ in pairs(scripted_ents.GetList()) do
-            if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" then
+            if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" and not QuestBlacklist[class] then
                 table.insert(DynamicRewardsList, { type = "entity", class = class })
             end
         end
 
+        -- 2. Grab Sandbox Entities List
         local spawnableEntities = list.Get("SpawnableEntities")
         if spawnableEntities then
             for class, _ in pairs(spawnableEntities) do
-                table.insert(DynamicRewardsList, { type = "entity", class = class })
+                if not QuestBlacklist[class] then
+                    table.insert(DynamicRewardsList, { type = "entity", class = class })
+                end
             end
         end
 
+        -- 3. Grab NPCs
         local npcList = list.Get("NPC")
         if npcList then
             for class, info in pairs(npcList) do
-                table.insert(DynamicRewardsList, { type = "npc", class = class, model = info.Model })
+                if not QuestBlacklist[class] then
+                    table.insert(DynamicRewardsList, { type = "npc", class = class, model = info.Model })
+                end
             end
         end
 
+        -- 4. Grab Vehicles
         local vehicleList = list.Get("Vehicles")
         if vehicleList then
             for class, info in pairs(vehicleList) do
-                table.insert(DynamicRewardsList, { type = "vehicle", class = class, model = info.Model, keyvalues = info.KeyValues })
+                if not QuestBlacklist[class] then
+                    table.insert(DynamicRewardsList, { type = "vehicle", class = class, model = info.Model, keyvalues = info.KeyValues })
+                end
             end
+        end
+
+        -- Fallback defaults if tables aren't fully populated on instant frame load
+        if #DynamicRewardsList == 0 then
+            table.insert(DynamicRewardsList, { type = "npc", class = "npc_helicopter" })
         end
     end
 
+    -- Run the scraper once components initialize
     hook.Add("Initialize", "FLGM_ScrapeOnLoad", function()
         ScrapeRewardRegistry()
     end)
 
+    ---------------------------------------------------------
+    -- QUEST LOGIC CONTROLLER
+    ---------------------------------------------------------
     local function StartRandomQuest(ply)
         if #DynamicRewardsList == 0 then ScrapeRewardRegistry() end
 
+        -- Gather every single physical entity, npc, or prop currently alive in the world
         local allMapEntities = ents.GetAll()
         local validTargets = {}
 
-        ---------------------------------------------------------
-        -- STRICT EVENT FILTER MATRIX
-        ---------------------------------------------------------
         for _, ent in ipairs(allMapEntities) do
-            -- Tracks down anything tagged as a falling sky entity from events.lua
-            if IsValid(ent) and ent.IsEventsLuaProp == true then
-                table.insert(validTargets, ent)
+            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
+                local class = ent:GetClass()
+                local model = ent:GetModel() or ""
+
+                -- Blacklist filter checks class type or if the model path includes a blacklisted phrase
+                local isBlacklisted = QuestBlacklist[class]
+                for blacklistedItem, _ in pairs(QuestBlacklist) do
+                    if string.find(model, blacklistedItem) then
+                        isBlacklisted = true
+                        break
+                    end
+                end
+
+                if not isBlacklisted then
+                    table.insert(validTargets, ent)
+                end
             end
         end
 
-        -- Handle sky timing delays safely
+        -- Safety fallback: if the map is completely empty, spawn a random object into the sky to hunt
         if #validTargets == 0 then
-            ply:ChatPrint("[Quest Engine] No custom props found on the map yet! Wait for the sky events to drop objects...")
-            -- Roll back counters so they can try click-triggering again instantly
-            FLGM_ActiveQuest.CorruptedDeleted = 9 
+            ply:ChatPrint("[Quest Engine] No valid target entities found on the map! Spawn or drop something first.")
             return
         end
 
+        -- Pick a completely random target entity from the map
         local chosenTarget = validTargets[math.random(1, #validTargets)]
         
         FLGM_ActiveQuest.Active = true
         FLGM_ActiveQuest.TargetEnt = chosenTarget
         FLGM_ActiveQuest.CurrentPlayer = ply
         
-        -- FIX: Handle fallback text names smoothly if the entity dropped doesn't use a standard .mdl file string (like weapons/SENTs)
-        local displayIdent = "Unknown Object"
-        local rawModel = chosenTarget:GetModel()
-
-        if rawModel and rawModel ~= "" then
-            displayIdent = string.match(rawModel, ".*/(.*)%.mdl") or rawModel
-        else
-            displayIdent = chosenTarget:GetClass() -- Fall back to class name (e.g., weapon_muzzle) if model data is hidden
-        end
-
-        FLGM_ActiveQuest.TargetName = displayIdent
+        -- Clean up print names for the chat prompt
+        local readableName = chosenTarget.PrintName or chosenTarget:GetClass()
+        FLGM_ActiveQuest.TargetName = readableName
 
         ---------------------------------------------------------
-        -- VISUAL RED ALERT INDICATOR
+        -- VISUAL RED ALERT TARGET PAINT
         ---------------------------------------------------------
-        -- Tint the selected prop bright solid red so it stands out immediately
+        -- Explicitly turns the target crimson red and alters render mode so it flashes perfectly
         chosenTarget:SetColor(Color(255, 0, 0, 255))
-        chosenTarget:SetRenderMode(RENDERMODE_TRANSCOLOR) -- Ensures transparency/color channels process cleanly
+        chosenTarget:SetRenderMode(RENDERMODE_TRANSCOLOR)
 
+        -- Notify the target player
         ply:PrintMessage(HUD_PRINTTALK, "========================================")
-        ply:PrintMessage(HUD_PRINTTALK, "[QUEST STARTED] A sky prop has been corrupted!")
-        ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. displayIdent .. " (Look for the one flashing RED!)")
-        ply:PrintMessage(HUD_PRINTTALK, "EQUIP: Use your flgm_tool to expunge it!")
+        ply:PrintMessage(HUD_PRINTTALK, "[QUEST STARTED] Find and eliminate the glitched target!")
+        ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. readableName .. " (ID: #" .. chosenTarget:EntIndex() .. ")")
+        ply:PrintMessage(HUD_PRINTTALK, "STATUS: TARGET PIECE HAS TURNED SOLID RED!")
+        ply:PrintMessage(HUD_PRINTTALK, "EQUIP: Use your flgm_tool to delete it!")
         ply:PrintMessage(HUD_PRINTTALK, "========================================")
         
         chosenTarget:EmitSound("ambient/machines/thumper_top.wav", 80, 130)
@@ -106,13 +147,15 @@ if SERVER then
 
     local function CompleteQuest(ply)
         ply:PrintMessage(HUD_PRINTTALK, "========================================")
-        ply:PrintMessage(HUD_PRINTTALK, "[QUEST COMPLETE] Target successfully deleted!")
+        ply:PrintMessage(HUD_PRINTTALK, "[QUEST COMPLETE] Target successfully expunged from memory!")
         
+        -- Pick a random dynamic reward (strictly NPCs or SENTS, no pure prop models)
         local rewardData = DynamicRewardsList[math.random(1, #DynamicRewardsList)]
         
         if rewardData then
-            ply:PrintMessage(HUD_PRINTTALK, "REWARD EARNED: " .. rewardData.class .. " has been delivered!")
+            ply:PrintMessage(HUD_PRINTTALK, "REWARD EARNED: A custom " .. rewardData.class .. " has been granted!")
             
+            -- Spawn the reward right above the winning player's head
             local spawnPos = ply:GetPos() + Vector(0, 0, 150)
             local rewardEnt = ents.Create(rewardData.class)
             
@@ -130,6 +173,7 @@ if SERVER then
         end
         ply:PrintMessage(HUD_PRINTTALK, "========================================")
 
+        -- Reset states completely so the player can restart it by mining corrupted props again
         FLGM_ActiveQuest.Active = false
         FLGM_ActiveQuest.TargetEnt = nil
         FLGM_ActiveQuest.TargetName = "None"
@@ -137,7 +181,12 @@ if SERVER then
         FLGM_ActiveQuest.CurrentPlayer = nil
     end
 
+    ---------------------------------------------------------
+    -- ENGINE TOOL DETECTION INTERCEPTORS
+    ---------------------------------------------------------
+    -- This hook catches whenever an entity is deleted on the server
     hook.Add("EntityRemoved", "FLGM_QuestDeletionTracker", function(ent)
+        -- 1. TRACK THE TARGET HUNT DETECTION:
         if FLGM_ActiveQuest.Active and IsValid(FLGM_ActiveQuest.TargetEnt) and ent == FLGM_ActiveQuest.TargetEnt then
             local ply = FLGM_ActiveQuest.CurrentPlayer
             if IsValid(ply) then
@@ -146,13 +195,19 @@ if SERVER then
             return
         end
 
+        -- 2. TRACK CORRUPTED PROP MINING TO UNLOCK THE QUEST:
         if ent:GetClass() == "flgm_corruptedprop" then
+            -- Find the player holding your custom tool gun
             for _, ply in ipairs(player.GetAll()) do
                 local activeWep = ply:GetActiveWeapon()
                 if IsValid(activeWep) and activeWep:GetClass() == "flgm_tool" then
                     
+                    ---------------------------------------------------------
+                    -- INTERCEPT: ACTIVE QUEST BLOCKER
+                    ---------------------------------------------------------
+                    -- If a quest is already active, refuse to count or progress toward a new one
                     if FLGM_ActiveQuest.Active then
-                        ply:ChatPrint("[Quest Engine] ERROR: Complete your current tracking objective first! Target: " .. FLGM_ActiveQuest.TargetName)
+                        ply:ChatPrint("[Quest Engine] ERROR: You must complete the current quest first! Target: " .. FLGM_ActiveQuest.TargetName)
                         return 
                     end
 
@@ -160,9 +215,9 @@ if SERVER then
                     local remaining = 10 - FLGM_ActiveQuest.CorruptedDeleted
 
                     if remaining > 0 then
-                        ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/10) Destroy " .. remaining .. " more.")
+                        ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/10) Destroy " .. remaining .. " more to activate quest.")
                     else
-                        ply:ChatPrint("[Quest Engine] Objective calculated. Finding a falling sky prop...")
+                        ply:ChatPrint("[Quest Engine] Critical threshold met! Initializing world tracking matrix...")
                         StartRandomQuest(ply)
                     end
                     break
@@ -172,13 +227,16 @@ if SERVER then
     end)
 end
 
+---------------------------------------------------------
+-- OPTIONAL HUD SYNC DISPLAY (Client-Side)
+---------------------------------------------------------
 if CLIENT then
     hook.Add("HUDPaint", "FLGM_QuestStatusDisplay", function()
         if FLGM_ActiveQuest and FLGM_ActiveQuest.Active then
-            draw.RoundedBox(4, 20, 20, 320, 65, Color(0, 0, 0, 180))
+            draw.RoundedBox(4, 20, 20, 300, 65, Color(0, 0, 0, 180))
             draw.SimpleText("CURRENT OBJECTIVE:", "DermaDefaultBold", 30, 25, Color(255, 60, 60, 255))
             draw.SimpleText("Find & Remove: " .. FLGM_ActiveQuest.TargetName, "DermaDefault", 30, 45, Color(255, 255, 255, 255))
-            draw.SimpleText("Status: Selected model turned RED", "DermaDefault", 30, 65, Color(200, 200, 200, 255))
+            draw.SimpleText("Status: Selected target is painted RED", "DermaDefault", 30, 65, Color(200, 200, 200, 255))
         end
     end)
 end
