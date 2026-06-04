@@ -199,6 +199,7 @@ hook.Add("Tick", "", function()
 		self:GetOwner():PrintMessage(HUD_PRINTTALK, "A quest has started")
 		local NavR = navmesh.GetNavArea(Pos, -500)
 		local Nav = NavR[math.random(1, table.Count(NavR))]
+		print(Nav)
 		if IsValid(Nav) then
 			
 			local RandPoint = Nav:GetRandomPoint()
