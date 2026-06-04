@@ -136,6 +136,12 @@ function SWEP:PrimaryAttack()
 						wpn:Spawn()
 					end
 				end
+			elseif Str[2]=="evilcorruptedprop" then
+				self:EmitSound("buttons/blip01.wav",0)
+				
+				if ( SERVER ) then
+					trace.Entity:Remove()
+				end
 			end
 		elseif !trace.Entity:IsWorld() then
 			trace.Entity:EmitSound("friends/friend_join.wav",0)

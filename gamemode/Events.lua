@@ -179,9 +179,9 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     end
                 end
             elseif RandInt == 3 then
-                local change = math.random(0, 5)
+                local change = math.random(0, 10)
 
-                if change <5 then
+                if change <10 then
                     local prop = ents.Create("flgm_corruptedprop")
                     if IsValid(prop) then
                         prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
