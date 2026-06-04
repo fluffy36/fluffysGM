@@ -52,6 +52,9 @@ if SERVER then
         ["vgui_screen"] = true,
         ["water_lod_control"] = true,
     -- Map Flow Data Logic & Event Processors
+        ["spotlight_end"] = true,
+        ["Door Base"] = true,
+        ["beam"] = true,
         ["logic_achievement"] = true,
         ["logic_active_autosave"] = true,
         ["logic_auto"] = true,
