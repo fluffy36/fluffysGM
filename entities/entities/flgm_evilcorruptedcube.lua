@@ -31,15 +31,21 @@ function ENT:Initialize()
     end
 end
 
-
+if ( SERVER ) then
     
-function ENT:OnRemove()
-    if ( SERVER ) then
+    function ENT:OnRemove()
+       
         if GM_REMOVING_ALL or not IsValid(self) then return end
         
         local currentPos = self:GetPos()
         local currentAng = self:GetAngles()
         
+        
+        local effectData = EffectData()
+        effectData:SetOrigin(currentPos)
+        effectData:SetScale(2) 
+        effectData:SetMagnitude(3) 
+        util.Effect("Sparks", effectData)
         
         local clone1 = ents.Create(self:GetClass())
         if IsValid(clone1) then
@@ -52,21 +58,20 @@ function ENT:OnRemove()
             if IsValid(phys1) then phys1:ApplyForceCenter(Vector(math.random(-200, 200), math.random(-200, 200), 300)) end
         end
 
-        
-            local clone2 = ents.Create(self:GetClass())
-            if IsValid(clone2) then
-                clone2:SetPos(currentPos + Vector(math.random(-15, 15), math.random(-15, 15), 10))
-                clone2:SetAngles(currentAng)
-                clone2:Spawn()
-                
-                
-                local phys2 = clone2:GetPhysicsObject()
-                if IsValid(phys2) then phys2:ApplyForceCenter(Vector(math.random(-200, 200), math.random(-200, 200), 300)) end
-            end
+       
+        local clone2 = ents.Create(self:GetClass())
+        if IsValid(clone2) then
+            clone2:SetPos(currentPos + Vector(math.random(-15, 15), math.random(-15, 15), 10))
+            clone2:SetAngles(currentAng)
+            clone2:Spawn()
             
             
-            self:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 75, 150)
+            local phys2 = clone2:GetPhysicsObject()
+            if IsValid(phys2) then phys2:ApplyForceCenter(Vector(math.random(-200, 200), math.random(-200, 200), 300)) end
         end
+        
+        
+        self:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 75, 150)
     end
 end
 
