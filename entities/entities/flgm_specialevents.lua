@@ -485,6 +485,7 @@ if SERVER then
         
         -- Clean up print names for the chat prompt
         local readableName = chosenTarget.PrintName or chosenTarget:GetClass()
+        local chosenClass = chosenTarget:GetClass()
         FLGM_ActiveQuest.TargetName = readableName
 
         ---------------------------------------------------------
@@ -498,7 +499,7 @@ if SERVER then
         for i,ply in pairs(player.GetAll()) do
             ply:PrintMessage(HUD_PRINTTALK, "========================================")
             ply:PrintMessage(HUD_PRINTTALK, "[QUEST STARTED] Find and eliminate the glitched target!")
-            ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. readableName .. " (ID: #" .. chosenTarget:EntIndex() .. ")")
+            ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. readableName .. "(CLASS): ".. chosenClass .. " (ID: #" .. chosenTarget:EntIndex() .. ")")
             ply:PrintMessage(HUD_PRINTTALK, "STATUS: TARGET PIECE HAS TURNED SOLID RED!")
             ply:PrintMessage(HUD_PRINTTALK, "EQUIP: Use your flgm_tool to delete it!")
             ply:PrintMessage(HUD_PRINTTALK, "========================================")
