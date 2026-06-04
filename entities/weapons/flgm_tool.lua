@@ -99,7 +99,7 @@ function SWEP:DoToolTrace()
 
 	return trace
 end
-local CorruptedPropsAmount = 0
+CorruptedPropsAmount = 0
 function SWEP:PrimaryAttack()
 
     local trace = self:DoToolTrace()
