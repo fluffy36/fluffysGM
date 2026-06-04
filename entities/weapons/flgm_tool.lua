@@ -42,7 +42,7 @@ function SWEP:Deploy()
     
 end
 
-concommand.Add("flgm_restart_events", function(ply)
+concommand.Add("flgm_reset_corruptedpropsamount", function(ply)
     CorruptedPropsAmount = 0
 end)
 
