@@ -466,7 +466,9 @@ if SERVER then
 
         -- Safety fallback: if the map is completely empty, spawn a random object into the sky to hunt
         if #validTargets == 0 then
-            ply:ChatPrint("[Quest Engine] No valid alternative target entities found on the map!")
+            for i,ply in pairs(player.GetAll()) do
+                ply:ChatPrint("[Quest Engine] No valid alternative target entities found on the map!")
+            end
             return
         end
 
@@ -489,25 +491,31 @@ if SERVER then
         chosenTarget:SetRenderMode(RENDERMODE_TRANSCOLOR)
 
         -- Notify the target player
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
-        ply:PrintMessage(HUD_PRINTTALK, "[QUEST STARTED] Find and eliminate the glitched target!")
-        ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. readableName .. " (ID: #" .. chosenTarget:EntIndex() .. ")")
-        ply:PrintMessage(HUD_PRINTTALK, "STATUS: TARGET PIECE HAS TURNED SOLID RED!")
-        ply:PrintMessage(HUD_PRINTTALK, "EQUIP: Use your flgm_tool to delete it!")
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
+        for i,ply in pairs(player.GetAll()) do
+            ply:PrintMessage(HUD_PRINTTALK, "========================================")
+            ply:PrintMessage(HUD_PRINTTALK, "[QUEST STARTED] Find and eliminate the glitched target!")
+            ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. readableName .. " (ID: #" .. chosenTarget:EntIndex() .. ")")
+            ply:PrintMessage(HUD_PRINTTALK, "STATUS: TARGET PIECE HAS TURNED SOLID RED!")
+            ply:PrintMessage(HUD_PRINTTALK, "EQUIP: Use your flgm_tool to delete it!")
+            ply:PrintMessage(HUD_PRINTTALK, "========================================")
+        end
         
         chosenTarget:EmitSound("ambient/machines/thumper_top.wav", 80, 130)
     end
 
     local function CompleteQuest(ply)
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
-        ply:PrintMessage(HUD_PRINTTALK, "[QUEST COMPLETE] Target successfully expunged from memory!")
+        for i,ply in pairs(player.GetAll()) do
+            ply:PrintMessage(HUD_PRINTTALK, "========================================")
+            ply:PrintMessage(HUD_PRINTTALK, "[QUEST COMPLETE] Target successfully expunged from memory!")
+        end
         
         -- Pick a random dynamic reward (strictly NPCs or SENTS, no pure prop models)
         local rewardData = DynamicRewardsList[math.random(1, #DynamicRewardsList)]
         
         if rewardData then
-            ply:PrintMessage(HUD_PRINTTALK, "REWARD EARNED: A custom " .. rewardData.class .. " has been granted!")
+            for i,ply in pairs(player.GetAll()) do
+                ply:PrintMessage(HUD_PRINTTALK, "REWARD EARNED: A custom " .. rewardData.class .. " has been granted!")
+            end
             
             -- Spawn the reward right above the winning player's head
             local spawnPos = ply:GetPos() + Vector(0, 0, 150)
@@ -525,7 +533,9 @@ if SERVER then
                 rewardEnt:Activate()
             end
         end
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
+        for i,ply in pairs(player.GetAll()) do
+            ply:PrintMessage(HUD_PRINTTALK, "========================================")
+        end
 
         -- Reset states completely so the player can restart it by mining corrupted props again
         FLGM_ActiveQuest.Active = false
@@ -561,7 +571,9 @@ if SERVER then
                     ---------------------------------------------------------
                     -- If a quest is already active, refuse to count or progress toward a new one
                     if FLGM_ActiveQuest.Active then
-                        ply:ChatPrint("[Quest Engine] ERROR: You must complete the current quest first! Target: " .. FLGM_ActiveQuest.TargetName)
+                        for i,ply in pairs(player.GetAll()) do
+                            ply:ChatPrint("[Quest Engine] ERROR: You must complete the current quest first! Target: " .. FLGM_ActiveQuest.TargetName)
+                        end
                         return 
                     end
 
@@ -569,9 +581,13 @@ if SERVER then
                     local remaining = 5 - FLGM_ActiveQuest.CorruptedDeleted
 
                     if remaining > 0 then
-                        ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/5) Destroy " .. remaining .. " more to activate quest.")
+                        for i,ply in pairs(player.GetAll()) do
+                            ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/5) Destroy " .. remaining .. " more to activate quest.")
+                        end
                     else
-                        ply:ChatPrint("[Quest Engine] Critical threshold met! Initializing world tracking matrix...")
+                        for i,ply in pairs(player.GetAll()) do
+                            ply:ChatPrint("[Quest Engine] Critical threshold met! Initializing world tracking matrix...")
+                        end
                         StartRandomQuest(ply)
                     end
                     break
@@ -586,11 +602,14 @@ if SERVER then
     hook.Add("PlayerSay", "FLGM_QuestSkipCommand", function(ply, text)
         if string.lower(text) == "/skipquest" then
             if not FLGM_ActiveQuest.Active then
-                ply:ChatPrint("[Quest Engine] There is no active quest to skip!")
+                for i,ply in pairs(player.GetAll()) do
+                    ply:ChatPrint("[Quest Engine] There is no active quest to skip!")
+                end
                 return ""
             end
-
-            ply:ChatPrint("[Quest Engine] Rerolling matrix... Skipping active target: " .. FLGM_ActiveQuest.TargetName)
+            for i,ply in pairs(player.GetAll()) do
+                ply:ChatPrint("[Quest Engine] Rerolling matrix... Skipping active target: " .. FLGM_ActiveQuest.TargetName)
+            end
             
             -- Revert the old target back to standard look so it doesn't stay red forever
             if IsValid(FLGM_ActiveQuest.TargetEnt) then
