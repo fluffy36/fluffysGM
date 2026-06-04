@@ -1,201 +1,227 @@
-local EventStart = false
-local flgm_PropSpawnRate = CreateConVar("flgm_PropSpawnRate", 4, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Sets prop spawn rate of items in the air")
-local TimerStart = false
 
-concommand.Add("flgm_restart_events", function(ply)
-    hook.Run("PlayerInitialSpawn", ply)
+AddCSLuaFile()
+
+SWEP.PrintName = "Tool gun?"
+SWEP.Author = "Fluffy"
+SWEP.Purpose = "I cant tell if this is the real one..."
+
+SWEP.Slot = 5
+SWEP.SlotPos = 4
+
+SWEP.Spawnable = true
+
+SWEP.ShootSound = Sound( "Toolgun.Single" )
+
+SWEP.ViewModel		= "models/weapons/c_toolgun.mdl"
+SWEP.WorldModel		= "models/weapons/w_toolgun.mdl"
+
+SWEP.UseHands = true
+
+SWEP.Primary.ClipSize = -1
+SWEP.Primary.DefaultClip = -1
+SWEP.Primary.Automatic = false
+SWEP.Primary.Ammo = "none"
+
+SWEP.Secondary.ClipSize = -1
+SWEP.Secondary.DefaultClip = -1
+SWEP.Secondary.Automatic = false
+SWEP.Secondary.Ammo = "none"
+
+SWEP.HoldType = "revolver"
+local CorruptedPropsAmount = 0
+
+
+function SWEP:Initialize()
+    self:SetHoldType( self.HoldType )
+
+	
+end
+
+
+function SWEP:Deploy()
+    
+end
+
+concommand.Add("flgm_reset_corruptedpropsamount", function(ply)
+    CorruptedPropsAmount = 0
 end)
 
-hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
-    if EventStart then return end
-    EventStart = true
+-- The shoot effect
+function SWEP:DoShootEffect( hitpos, hitnormal, entity, physbone, bFirstTimePredicted )
+
+	local owner = self:GetOwner()
+
+	self:EmitSound( self.ShootSound )
+	self:SendWeaponAnim( ACT_VM_PRIMARYATTACK ) -- View model animation
+
+	-- There's a bug with the model that's causing a muzzle to
+	-- appear on everyone's screen when we fire this animation.
+	owner:SetAnimation( PLAYER_ATTACK1 ) -- 3rd Person Animation
+
+	if ( !bFirstTimePredicted ) then return end
+	if ( GetConVarNumber( "gmod_drawtooleffects" ) == 0 ) then return end
+
+	local effectdata = EffectData()
+	effectdata:SetOrigin( hitpos )
+	effectdata:SetNormal( hitnormal )
+	effectdata:SetEntity( entity )
+	effectdata:SetAttachment( physbone )
+	util.Effect( "selection_indicator", effectdata )
+
+	local effect_tr = EffectData()
+	effect_tr:SetOrigin( hitpos )
+	effect_tr:SetStart( owner:GetShootPos() )
+	effect_tr:SetAttachment( 1 )
+	effect_tr:SetEntity( self )
+	util.Effect( "ToolTracer", effect_tr )
+
+end
+
+local toolMask = bit.bor( CONTENTS_SOLID, CONTENTS_MOVEABLE, CONTENTS_MONSTER, CONTENTS_WINDOW, CONTENTS_DEBRIS, CONTENTS_GRATE, CONTENTS_AUX )
+function SWEP:DoToolTrace()
+	local owner = self:GetOwner()
+
+	local tr = util.GetPlayerTrace( owner )
+	tr.mask = toolMask
+	tr.mins = vector_origin
+	tr.maxs = tr.mins
+	tr.filter = { owner, owner:GetVehicle() }
+
+	local trace = util.TraceLine( tr )
+	if ( !trace.Hit || !IsValid( trace.Entity ) ) then
+		local hulltrace = util.TraceHull( tr )
+
+		if ( IsValid( hulltrace.Entity ) ) then
+			trace = hulltrace
+			trace.HullTrace = true
+		end
+	end
+	if ( !trace.Hit ) then return end
+
+	return trace
+end
+
+local GoalOnGoing = false
+
+function SWEP:PrimaryAttack()
+
+	if !GoalOnGoing then
+
+		local trace = self:DoToolTrace()
+		if ( !trace ) then return end
+
+		local tool = self
+		if ( !tool ) then return end
+
+		self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
+		local Str = string.Split(trace.Entity:GetClass(), "_")
+		--PrintTable(Str)
+		if Str[1]=="flgm" then
+			if Str[2]=="corruptedprop" then
+				self:EmitSound("resource/warning.wav",0)
+				CorruptedPropsAmount = CorruptedPropsAmount + 1
+				if ( SERVER ) then
+					trace.Entity:Remove()
+					if self:GetOwner():Health() < 200 then
+						self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+					end
+					local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
+					--print(Nav)
+					if IsValid(Nav) or Nav ~= nil then
+						local RandPoint = Nav:GetRandomPoint()
+						Weapons = {"weapon_crowbar","weapon_physcannon","weapon_pistol","weapon_smg1","weapon_357","weapon_shotgun","weapon_crossbow","weapon_rpg"}
+
+						local wpn =  ents.Create(Weapons[math.random(1, table.Count(Weapons))])
+						wpn:SetPos(RandPoint+Vector(0,0,500))
+						wpn:Spawn()
+					end
+				end
+			elseif Str[2]=="evilcorruptedcube" or Str[2]=="err0126" then
+				self:EmitSound("buttons/blip1.wav",0)
+				
+				if ( SERVER ) then
+					trace.Entity:Remove()
+				end
+			end
+		elseif !trace.Entity:IsWorld() then
+			trace.Entity:EmitSound("friends/friend_join.wav",0)
+			if ( SERVER ) then
+				trace.Entity:Remove()
+				if self:GetOwner():Health() < 200 then
+					self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+				end
+			end
+		end
+
+	else
+		self:GetOwner():PrintMessage(HUD_PRINTTALK, "You must complete the quest first!")
+		print(GoalOnGoing)
+	end
+
+end
+
+function SWEP:SecondaryAttack()
     
-    local owner = Ply
+    local trace = self:DoToolTrace()
+	if ( !trace ) then return end
 
-    local Props_c17 = {"models/props_c17/awning001a.mdl", "models/props_c17/awning002a.mdl", "models/props_c17/bench01a.mdl", "models/props_c17/briefcase001a.mdl", "models/props_c17/canister01a.mdl", "models/props_c17/canister02a.mdl", "models/props_c17/canisterchunk01a.mdl", "models/props_c17/canisterchunk01b.mdl", "models/props_c17/canisterchunk01c.mdl", "models/props_c17/canisterchunk01d.mdl", "models/props_c17/canisterchunk01f.mdl", "models/props_c17/canisterchunk01g.mdl", "models/props_c17/canisterchunk01h.mdl", "models/props_c17/canisterchunk01i.mdl", "models/props_c17/canisterchunk01k.mdl", "models/props_c17/canisterchunk01l.mdl", "models/props_c17/canisterchunk01m.mdl", "models/props_c17/canisterchunk02a.mdl", "models/props_c17/canisterchunk02b.mdl", "models/props_c17/canisterchunk02c.mdl", "models/props_c17/canisterchunk02d.mdl", "models/props_c17/canisterchunk02e.mdl", "models/props_c17/canisterchunk02f.mdl", "models/props_c17/canisterchunk02g.mdl", "models/props_c17/canisterchunk02h.mdl", "models/props_c17/canisterchunk02i.mdl", "models/props_c17/canisterchunk02j.mdl", "models/props_c17/canisterchunk02k.mdl", "models/props_c17/canisterchunk02l.mdl", "models/props_c17/canisterchunk02m.mdl", "models/props_c17/canister_propane01a.mdl", "models/props_c17/cashregister01a.mdl", "models/props_c17/chair02a.mdl", "models/props_c17/chair_kleiner03a.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/chair_stool01a.mdl", "models/props_c17/clock01.mdl", "models/props_c17/column02a.mdl", "models/props_c17/computer01_keyboard.mdl", "models/props_c17/concrete_barrier001a.mdl", "models/props_c17/consolebox01a.mdl", "models/props_c17/consolebox03a.mdl", "models/props_c17/consolebox05a.mdl", "models/props_c17/display_cooler01a.mdl", "models/props_c17/doll01.mdl", "models/props_c17/door01_left.mdl", "models/props_c17/door02_double.mdl", "models/props_c17/fence01a.mdl", "models/props_c17/fence01b.mdl", "models/props_c17/fence02a.mdl", "models/props_c17/fence02b.mdl", "models/props_c17/fence03a.mdl", "models/props_c17/fence04a.mdl", "models/props_c17/fountain_01.mdl", "models/props_c17/frame002a.mdl", "models/props_c17/furniturearmchair001a.mdl", "models/props_c17/furniturebathtub001a.mdl", "models/props_c17/furniturebed001a.mdl", "models/props_c17/furnitureboiler001a.mdl", "models/props_c17/furniturechair001a.mdl", "models/props_c17/furniturechair001a_chunk01.mdl", "models/props_c17/furniturechair001a_chunk02.mdl", "models/props_c17/furniturechair001a_chunk03.mdl", "models/props_c17/furniturecouch001a.mdl", "models/props_c17/furniturecouch002a.mdl", "models/props_c17/furniturecupboard001a.mdl", "models/props_c17/furnituredrawer001a.mdl", "models/props_c17/furnituredrawer001a_chunk01.mdl", "models/props_c17/furnituredrawer001a_chunk02.mdl", "models/props_c17/furnituredrawer001a_chunk03.mdl", "models/props_c17/furnituredrawer001a_chunk04.mdl", "models/props_c17/furnituredrawer001a_chunk05.mdl", "models/props_c17/furnituredrawer001a_chunk06.mdl", "models/props_c17/furnituredrawer001a_shard01.mdl", "models/props_c17/furnituredrawer002a.mdl", "models/props_c17/furnituredrawer003a.mdl", "models/props_c17/furnituredresser001a.mdl", "models/props_c17/furniturefireplace001a.mdl", "models/props_c17/furniturefridge001a.mdl", "models/props_c17/furnituremattress001a.mdl", "models/props_c17/furniturepipecluster001a.mdl", "models/props_c17/furnitureradiator001a.mdl", "models/props_c17/furnitureshelf001a.mdl", "models/props_c17/furnitureshelf001b.mdl", "models/props_c17/furnitureshelf002a.mdl", "models/props_c17/furnituresink001a.mdl", "models/props_c17/furniturestove001a.mdl", "models/props_c17/furnituretable001a.mdl", "models/props_c17/furnituretable002a.mdl", "models/props_c17/furnituretable003a.mdl", "models/props_c17/furnituretoilet001a.mdl", "models/props_c17/furniturewashingmachine001a.mdl", "models/props_c17/gasmeter001a.mdl", "models/props_c17/gasmeter002a.mdl", "models/props_c17/gasmeter003a.mdl", "models/props_c17/gasmeterpipes001a.mdl", "models/props_c17/gasmeterpipes002a.mdl", "models/props_c17/gaspipes001a.mdl", "models/props_c17/gaspipes002a.mdl", "models/props_c17/gaspipes003a.mdl", "models/props_c17/gaspipes004a.mdl", "models/props_c17/gaspipes005a.mdl", "models/props_c17/gaspipes006a.mdl", "models/props_c17/gate_door01a.mdl", "models/props_c17/gate_door02a.mdl", "models/props_c17/gravestone001a.mdl", "models/props_c17/gravestone002a.mdl", "models/props_c17/gravestone003a.mdl", "models/props_c17/gravestone004a.mdl", "models/props_c17/gravestone_coffinpiece001a.mdl", "models/props_c17/gravestone_coffinpiece002a.mdl", "models/props_c17/gravestone_cross001a.mdl", "models/props_c17/gravestone_cross001b.mdl", "models/props_c17/gravestone_statue001a.mdl", "models/props_c17/grinderclamp01a.mdl", "models/props_c17/handrail04_brokencorner.mdl", "models/props_c17/handrail04_brokenlong.mdl", "models/props_c17/handrail04_brokensinglerise.mdl", "models/props_c17/handrail04_cap.mdl", "models/props_c17/handrail04_corner.mdl", "models/props_c17/handrail04_doublerise.mdl", "models/props_c17/handrail04_end.mdl", "models/props_c17/handrail04_long.mdl", "models/props_c17/handrail04_medium.mdl", "models/props_c17/handrail04_short.mdl", "models/props_c17/handrail04_singlerise.mdl", "models/props_c17/lamp001a.mdl", "models/props_c17/lampfixture01a.mdl", "models/props_c17/lamppost03a_off.mdl", "models/props_c17/lamppost03a_off_dynamic.mdl", "models/props_c17/lamppost03a_on.mdl", "models/props_c17/lampshade001a.mdl", "models/props_c17/lamp_bell_on.mdl", "models/props_c17/lamp_standard_off01.mdl", "models/props_c17/light_cagelight01_off.mdl", "models/props_c17/light_cagelight01_on.mdl", "models/props_c17/light_cagelight02_off.mdl", "models/props_c17/light_cagelight02_on.mdl", "models/props_c17/light_decklight01_off.mdl", "models/props_c17/light_decklight01_on.mdl", "models/props_c17/light_domelight01_off.mdl", "models/props_c17/light_domelight02_off.mdl", "models/props_c17/light_domelight02_on.mdl", "models/props_c17/light_floodlight02_off.mdl", "models/props_c17/light_industrialbell01_on.mdl", "models/props_c17/light_magnifyinglamp02.mdl", "models/props_c17/lockers001a.mdl", "models/props_c17/metalladder001.mdl", "models/props_c17/metalladder002.mdl", "models/props_c17/metalladder002b.mdl", "models/props_c17/metalladder003.mdl", "models/props_c17/metalpot001a.mdl", "models/props_c17/metalpot002a.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/oildrum001_explosive.mdl", "models/props_c17/oildrumchunk01a.mdl", "models/props_c17/oildrumchunk01b.mdl", "models/props_c17/oildrumchunk01c.mdl", "models/props_c17/oildrumchunk01d.mdl", "models/props_c17/oildrumchunk01e.mdl", "models/props_c17/overhaingcluster_001a.mdl", "models/props_c17/overpass_001a.mdl", "models/props_c17/overpass_001b.mdl", "models/props_c17/paper01.mdl", "models/props_c17/pillarcluster_001a.mdl", "models/props_c17/pillarcluster_001b.mdl", "models/props_c17/pillarcluster_001c.mdl", "models/props_c17/pillarcluster_001d.mdl", "models/props_c17/pillarcluster_001f.mdl", "models/props_c17/pipe_cap003.mdl", "models/props_c17/pipe_cap005.mdl", "models/props_c17/pipe_cap005c.mdl", "models/props_c17/playgroundslide01.mdl", "models/props_c17/playgroundtick-tack-toe_block01a.mdl", "models/props_c17/playgroundtick-tack-toe_post01.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/playground_jungle_gym01a.mdl", "models/props_c17/playground_jungle_gym01b.mdl", "models/props_c17/playground_swingset01.mdl", "models/props_c17/playground_swingset_seat01a.mdl", "models/props_c17/playground_teetertoter_seat.mdl", "models/props_c17/playground_teetertoter_stan.mdl", "models/props_c17/pulleyhook01.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_c17/pulleywheels_small01.mdl", "models/props_c17/pushbroom.mdl", "models/props_c17/shelfunit01a.mdl", "models/props_c17/signpole001.mdl", "models/props_c17/statue_horse.mdl", "models/props_c17/streetsign001c.mdl", "models/props_c17/streetsign002b.mdl", "models/props_c17/streetsign003b.mdl", "models/props_c17/streetsign004e.mdl", "models/props_c17/streetsign004f.mdl", "models/props_c17/streetsign005b.mdl", "models/props_c17/streetsign005c.mdl", "models/props_c17/streetsign005d.mdl", "models/props_c17/substation_circuitbreaker01a.mdl", "models/props_c17/substation_stripebox01a.mdl", "models/props_c17/substation_transformer01a.mdl", "models/props_c17/substation_transformer01b.mdl", "models/props_c17/substation_transformer01c.mdl", "models/props_c17/substation_transformer01d.mdl", "models/props_c17/substation_transformer01e.mdl", "models/props_c17/suitcase001a.mdl", "models/props_c17/suitcase_passenger_physics.mdl", "models/props_c17/support01.mdl", "models/props_c17/tools_pliers01a.mdl", "models/props_c17/tools_wrench01a.mdl", "models/props_c17/traffic_light001a.mdl", "models/props_c17/trappropeller_blade.mdl", "models/props_c17/trappropeller_engine.mdl", "models/props_c17/trappropeller_lever.mdl", "models/props_c17/trap_crush01a.mdl", "models/props_c17/truss02a.mdl", "models/props_c17/truss02c.mdl", "models/props_c17/truss02d.mdl", "models/props_c17/truss02e.mdl", "models/props_c17/truss02f.mdl", "models/props_c17/truss02g.mdl", "models/props_c17/truss02h.mdl", "models/props_c17/truss03a.mdl", "models/props_c17/truss03b.mdl", "models/props_c17/tv_monitor01.mdl", "models/props_c17/tv_monitor01_screen.mdl", "models/props_c17/utilityconducter001.mdl", "models/props_c17/utilityconnecter002.mdl", "models/props_c17/utilityconnecter003.mdl", "models/props_c17/utilityconnecter005.mdl", "models/props_c17/utilityconnecter006.mdl", "models/props_c17/utilityconnecter006b.mdl", "models/props_c17/utilityconnecter006c.mdl", "models/props_c17/utilityconnecter006d.mdl", "models/props_c17/utilitypole01a.mdl", "models/props_c17/utilitypole01b.mdl", "models/props_c17/utilitypole01d.mdl", "models/props_c17/utilitypole02b.mdl", "models/props_c17/utilitypole03a.mdl", "models/props_c17/utilitypolemount01a.mdl"}
-    local Props_WasteLand = {"models/props_wasteland/antlionhill.mdl", "models/props_wasteland/barricade001a.mdl", "models/props_wasteland/barricade001a_chunk01.mdl", "models/props_wasteland/barricade001a_chunk02.mdl", "models/props_wasteland/barricade001a_chunk03.mdl", "models/props_wasteland/barricade001a_chunk04.mdl", "models/props_wasteland/barricade001a_chunk05.mdl", "models/props_wasteland/barricade002a.mdl", "models/props_wasteland/barricade002a_chunk01.mdl", "models/props_wasteland/barricade002a_chunk02.mdl", "models/props_wasteland/barricade002a_chunk03.mdl", "models/props_wasteland/barricade002a_chunk04.mdl", "models/props_wasteland/barricade002a_chunk05.mdl", "models/props_wasteland/barricade002a_chunk06.mdl", "models/props_wasteland/boat_01.mdl", "models/props_wasteland/boat_fishing01a.mdl", "models/props_wasteland/boat_fishing02a.mdl", "models/props_wasteland/bridge_internals01.mdl", "models/props_wasteland/bridge_internals02.mdl", "models/props_wasteland/bridge_internals03.mdl", "models/props_wasteland/bridge_low_res.mdl", "models/props_wasteland/bridge_middle.mdl", "models/props_wasteland/bridge_railing.mdl", "models/props_wasteland/bridge_side01-other.mdl", "models/props_wasteland/bridge_side01.mdl", "models/props_wasteland/bridge_side02-other.mdl", "models/props_wasteland/bridge_side02.mdl", "models/props_wasteland/bridge_side03-other.mdl", "models/props_wasteland/bridge_side03.mdl", "models/props_wasteland/buoy01.mdl", "models/props_wasteland/cafeteria_bench001a.mdl", "models/props_wasteland/cafeteria_bench001a_chunk01.mdl", "models/props_wasteland/cafeteria_bench001a_chunk02.mdl", "models/props_wasteland/cafeteria_bench001a_chunk03.mdl", "models/props_wasteland/cafeteria_bench001a_chunk04.mdl", "models/props_wasteland/cafeteria_bench001a_chunk05.mdl", "models/props_wasteland/cafeteria_table001a.mdl", "models/props_wasteland/cafeteria_table001a_chunk01.mdl", "models/props_wasteland/cafeteria_table001a_chunk02.mdl", "models/props_wasteland/cafeteria_table001a_chunk03.mdl", "models/props_wasteland/cafeteria_table001a_chunk04.mdl", "models/props_wasteland/cafeteria_table001a_chunk05.mdl", "models/props_wasteland/cafeteria_table001a_chunk06.mdl", "models/props_wasteland/cafeteria_table001a_chunk07.mdl", "models/props_wasteland/cafeteria_table001a_chunk08.mdl", "models/props_wasteland/cargo_container01.mdl", "models/props_wasteland/cargo_container01b.mdl", "models/props_wasteland/cargo_container01c.mdl", "models/props_wasteland/chimneypipe01a.mdl", "models/props_wasteland/chimneypipe01b.mdl", "models/props_wasteland/chimneypipe02a.mdl", "models/props_wasteland/chimneypipe02b.mdl", "models/props_wasteland/controlroom_chair001a.mdl", "models/props_wasteland/controlroom_desk001a.mdl", "models/props_wasteland/controlroom_desk001b.mdl", "models/props_wasteland/controlroom_filecabinet001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_wasteland/controlroom_monitor001a.mdl", "models/props_wasteland/controlroom_monitor001b.mdl", "models/props_wasteland/controlroom_storagecloset001a.mdl", "models/props_wasteland/controlroom_storagecloset001b.mdl", "models/props_wasteland/coolingtank01.mdl", "models/props_wasteland/coolingtank02.mdl", "models/props_wasteland/cranemagnet01a.mdl", "models/props_wasteland/depot.mdl", "models/props_wasteland/depot_skybox.mdl", "models/props_wasteland/dockplank01a.mdl", "models/props_wasteland/dockplank01b.mdl", "models/props_wasteland/dockplank_chunk01a.mdl", "models/props_wasteland/dockplank_chunk01b.mdl", "models/props_wasteland/dockplank_chunk01c.mdl", "models/props_wasteland/dockplank_chunk01d.mdl", "models/props_wasteland/dockplank_chunk01e.mdl", "models/props_wasteland/dockplank_chunk01f.mdl", "models/props_wasteland/exterior_fence001a.mdl", "models/props_wasteland/exterior_fence001b.mdl", "models/props_wasteland/exterior_fence002a.mdl", "models/props_wasteland/exterior_fence002b.mdl", "models/props_wasteland/exterior_fence002c.mdl", "models/props_wasteland/exterior_fence002d.mdl", "models/props_wasteland/exterior_fence002e.mdl", "models/props_wasteland/exterior_fence003a.mdl", "models/props_wasteland/exterior_fence003b.mdl", "models/props_wasteland/gaspump001a.mdl", "models/props_wasteland/gear01.mdl", "models/props_wasteland/gear02.mdl", "models/props_wasteland/grainelevator01.mdl", "models/props_wasteland/horizontalcoolingtank04.mdl", "models/props_wasteland/interior_fence001a.mdl", "models/props_wasteland/interior_fence001b.mdl", "models/props_wasteland/interior_fence001c.mdl", "models/props_wasteland/interior_fence001d.mdl", "models/props_wasteland/interior_fence001e.mdl", "models/props_wasteland/interior_fence001g.mdl", "models/props_wasteland/interior_fence002a.mdl", "models/props_wasteland/interior_fence002b.mdl", "models/props_wasteland/interior_fence002c.mdl", "models/props_wasteland/interior_fence002d.mdl", "models/props_wasteland/interior_fence002e.mdl", "models/props_wasteland/interior_fence002f.mdl", "models/props_wasteland/interior_fence003a.mdl", "models/props_wasteland/interior_fence003b.mdl", "models/props_wasteland/interior_fence003d.mdl", "models/props_wasteland/interior_fence003e.mdl", "models/props_wasteland/interior_fence003f.mdl", "models/props_wasteland/interior_fence004a.mdl", "models/props_wasteland/interior_fence004b.mdl", "models/props_wasteland/kitchen_counter001a.mdl", "models/props_wasteland/kitchen_counter001b.mdl", "models/props_wasteland/kitchen_counter001c.mdl", "models/props_wasteland/kitchen_counter001d.mdl", "models/props_wasteland/kitchen_fridge001a.mdl", "models/props_wasteland/kitchen_shelf001a.mdl", "models/props_wasteland/kitchen_shelf002a.mdl", "models/props_wasteland/kitchen_stove001a.mdl", "models/props_wasteland/kitchen_stove002a.mdl", "models/props_wasteland/laundry_basket001.mdl", "models/props_wasteland/laundry_basket002.mdl", "models/props_wasteland/laundry_cart001.mdl", "models/props_wasteland/laundry_cart002.mdl", "models/props_wasteland/laundry_dryer001.mdl", "models/props_wasteland/laundry_dryer002.mdl", "models/props_wasteland/laundry_washer001a.mdl", "models/props_wasteland/laundry_washer003.mdl", "models/props_wasteland/lighthouse_fresnel_light.mdl", "models/props_wasteland/lighthouse_fresnel_light_base.mdl", "models/props_wasteland/lighthouse_stairs.mdl", "models/props_wasteland/lighthouse_stairs0b.mdl", "models/props_wasteland/lights_industrialcluster01a.mdl", "models/props_wasteland/light_spotlight01_base.mdl", "models/props_wasteland/light_spotlight01_lamp.mdl", "models/props_wasteland/light_spotlight02_base.mdl", "models/props_wasteland/light_spotlight02_lamp.mdl", "models/props_wasteland/medbridge_arch01.mdl", "models/props_wasteland/medbridge_base01.mdl", "models/props_wasteland/medbridge_post01.mdl", "models/props_wasteland/medbridge_strut01.mdl", "models/props_wasteland/panel_leverbase001a.mdl", "models/props_wasteland/panel_leverhandle001a.mdl", "models/props_wasteland/pipecluster001a.mdl", "models/props_wasteland/pipecluster001c.mdl", "models/props_wasteland/pipecluster002a.mdl", "models/props_wasteland/pipecluster003a_small.mdl", "models/props_wasteland/plasterwall029c_window01a.mdl", "models/props_wasteland/plasterwall029c_window01a_bars.mdl", "models/props_wasteland/plasterwall029g_window01a.mdl", "models/props_wasteland/plasterwall029g_window01a_bars.mdl", "models/props_wasteland/powertower01.mdl", "models/props_wasteland/prison_archgate001.mdl", "models/props_wasteland/prison_archgate002a.mdl", "models/props_wasteland/prison_archgate002b.mdl", "models/props_wasteland/prison_archgate002c.mdl", "models/props_wasteland/prison_archwindow001.mdl", "models/props_wasteland/prison_bedframe001a.mdl", "models/props_wasteland/prison_bedframe001b.mdl", "models/props_wasteland/prison_bracket001a.mdl", "models/props_wasteland/prison_cagedlight001a.mdl", "models/props_wasteland/prison_celldoor001a.mdl", "models/props_wasteland/prison_celldoor001b.mdl", "models/props_wasteland/prison_cellwindow002a.mdl", "models/props_wasteland/prison_conduit001a.mdl", "models/props_wasteland/prison_doortrack001a.mdl", "models/props_wasteland/prison_flourescentlight001a.mdl", "models/props_wasteland/prison_flourescentlight001b.mdl", "models/props_wasteland/prison_flourescentlight001c.mdl", "models/props_wasteland/prison_flourescentlight002b.mdl", "models/props_wasteland/prison_gate001a.mdl", "models/props_wasteland/prison_gate001b.mdl", "models/props_wasteland/prison_gate001c.mdl", "models/props_wasteland/prison_heater001a.mdl", "models/props_wasteland/prison_heater002a.mdl", "models/props_wasteland/prison_heavydoor001a.mdl", "models/props_wasteland/prison_lamp001a.mdl", "models/props_wasteland/prison_lamp001b.mdl", "models/props_wasteland/prison_lamp001c.mdl", "models/props_wasteland/prison_metalbed001a.mdl", "models/props_wasteland/prison_padlock001a.mdl", "models/props_wasteland/prison_padlock001b.mdl", "models/props_wasteland/prison_pipefaucet001a.mdl", "models/props_wasteland/prison_pipes001a.mdl", "models/props_wasteland/prison_pipes002a.mdl", "models/props_wasteland/prison_shelf001a.mdl", "models/props_wasteland/prison_shelf002a.mdl", "models/props_wasteland/prison_sink001a.mdl", "models/props_wasteland/prison_sink001b.mdl", "models/props_wasteland/prison_sinkchunk001b.mdl", "models/props_wasteland/prison_sinkchunk001c.mdl", "models/props_wasteland/prison_sinkchunk001d.mdl", "models/props_wasteland/prison_sinkchunk001e.mdl", "models/props_wasteland/prison_sinkchunk001f.mdl", "models/props_wasteland/prison_sinkchunk001g.mdl", "models/props_wasteland/prison_sinkchunk001h.mdl", "models/props_wasteland/prison_slidingdoor001a.mdl", "models/props_wasteland/prison_sprinkler001a.mdl", "models/props_wasteland/prison_sprinkler001b.mdl", "models/props_wasteland/prison_switchbox001a.mdl", "models/props_wasteland/prison_throwswitchbase001.mdl", "models/props_wasteland/prison_throwswitchlever001.mdl", "models/props_wasteland/prison_toilet01.mdl", "models/props_wasteland/prison_toiletchunk01a.mdl", "models/props_wasteland/prison_toiletchunk01b.mdl", "models/props_wasteland/prison_toiletchunk01c.mdl", "models/props_wasteland/prison_toiletchunk01d.mdl", "models/props_wasteland/prison_toiletchunk01e.mdl", "models/props_wasteland/prison_toiletchunk01f.mdl", "models/props_wasteland/prison_toiletchunk01g.mdl", "models/props_wasteland/prison_toiletchunk01h.mdl", "models/props_wasteland/prison_toiletchunk01i.mdl", "models/props_wasteland/prison_toiletchunk01j.mdl", "models/props_wasteland/prison_toiletchunk01k.mdl", "models/props_wasteland/prison_toiletchunk01l.mdl", "models/props_wasteland/prison_toiletchunk01m.mdl", "models/props_wasteland/prison_wallpile002a.mdl", "models/props_wasteland/rockcliff01b.mdl", "models/props_wasteland/rockcliff01c.mdl", "models/props_wasteland/rockcliff01e.mdl", "models/props_wasteland/rockcliff01f.mdl", "models/props_wasteland/rockcliff01g.mdl", "models/props_wasteland/rockcliff01j.mdl", "models/props_wasteland/rockcliff01k.mdl", "models/props_wasteland/rockcliff05a.mdl", "models/props_wasteland/rockcliff05b.mdl", "models/props_wasteland/rockcliff05e.mdl", "models/props_wasteland/rockcliff05f.mdl", "models/props_wasteland/rockcliff06d.mdl", "models/props_wasteland/rockcliff06i.mdl", "models/props_wasteland/rockcliff07b.mdl", "models/props_wasteland/rockcliff_cluster01b.mdl", "models/props_wasteland/rockcliff_cluster02a.mdl", "models/props_wasteland/rockcliff_cluster02b.mdl", "models/props_wasteland/rockcliff_cluster02c.mdl", "models/props_wasteland/rockcliff_cluster03a.mdl", "models/props_wasteland/rockcliff_cluster03b.mdl", "models/props_wasteland/rockcliff_cluster03c.mdl", "models/props_wasteland/rockgranite01a.mdl", "models/props_wasteland/rockgranite01b.mdl", "models/props_wasteland/rockgranite01c.mdl", "models/props_wasteland/rockgranite02a.mdl", "models/props_wasteland/rockgranite02b.mdl", "models/props_wasteland/rockgranite02c.mdl", "models/props_wasteland/rockgranite03a.mdl", "models/props_wasteland/rockgranite03b.mdl", "models/props_wasteland/rockgranite03c.mdl", "models/props_wasteland/rockgranite04a.mdl", "models/props_wasteland/rockgranite04b.mdl", "models/props_wasteland/rockgranite04c.mdl", "models/props_wasteland/shower_system001a.mdl", "models/props_wasteland/speakercluster01a.mdl", "models/props_wasteland/tram_bracket01.mdl", "models/props_wasteland/tram_lever01.mdl", "models/props_wasteland/tram_leverbase01.mdl", "models/props_wasteland/tugtop001.mdl", "models/props_wasteland/tugtop002.mdl", "models/props_wasteland/wheel01.mdl", "models/props_wasteland/wheel01a.mdl", "models/props_wasteland/wheel02a.mdl", "models/props_wasteland/wheel02b.mdl", "models/props_wasteland/wheel03a.mdl", "models/props_wasteland/wheel03b.mdl", "models/props_wasteland/woodwall030b_window01a.mdl", "models/props_wasteland/woodwall030b_window01a_bars.mdl", "models/props_wasteland/woodwall030b_window02a.mdl", "models/props_wasteland/woodwall030b_window02a_bars.mdl", "models/props_wasteland/woodwall030b_window03a.mdl", "models/props_wasteland/woodwall030b_window03a_bars.mdl", "models/props_wasteland/wood_fence01a.mdl", "models/props_wasteland/wood_fence01b.mdl", "models/props_wasteland/wood_fence01c.mdl", "models/props_wasteland/wood_fence02a.mdl", "models/props_wasteland/wood_fence02a_board01a.mdl", "models/props_wasteland/wood_fence02a_board03a.mdl", "models/props_wasteland/wood_fence02a_board04a.mdl", "models/props_wasteland/wood_fence02a_board05a.mdl", "models/props_wasteland/wood_fence02a_board07a.mdl", "models/props_wasteland/wood_fence02a_board08a.mdl", "models/props_wasteland/wood_fence02a_board09a.mdl", "models/props_wasteland/wood_fence02a_board10a.mdl", "models/props_wasteland/wood_fence02a_shard01a.mdl"}
-    local Props_vehicles = {"models/props_vehicles/apc001.mdl", "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/car001a_hatchback.mdl", "models/props_vehicles/car001a_phy.mdl", "models/props_vehicles/car001b_hatchback.mdl", "models/props_vehicles/car001b_phy.mdl", "models/props_vehicles/car002a.mdl", "models/props_vehicles/car002a_physics.mdl", "models/props_vehicles/car002b.mdl", "models/props_vehicles/car002b_physics.mdl", "models/props_vehicles/car003a.mdl", "models/props_vehicles/car003a_physics.mdl", "models/props_vehicles/car003b.mdl", "models/props_vehicles/car003b_physics.mdl", "models/props_vehicles/car004a.mdl", "models/props_vehicles/car004a_physics.mdl", "models/props_vehicles/car004b.mdl", "models/props_vehicles/car004b_physics.mdl", "models/props_vehicles/car005a.mdl", "models/props_vehicles/car005a_physics.mdl", "models/props_vehicles/car005b.mdl", "models/props_vehicles/car005b_physics.mdl", "models/props_vehicles/carparts_axel01a.mdl", "models/props_vehicles/carparts_door01a.mdl", "models/props_vehicles/carparts_muffler01a.mdl", "models/props_vehicles/carparts_tire01a.mdl", "models/props_vehicles/carparts_wheel01a.mdl", "models/props_vehicles/generatortrailer01.mdl", "models/props_vehicles/tanker001a.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_vehicles/trailer001a.mdl", "models/props_vehicles/trailer002a.mdl", "models/props_vehicles/truck001a.mdl", "models/props_vehicles/truck002a_cab.mdl", "models/props_vehicles/truck003a.mdl", "models/props_vehicles/van001a.mdl", "models/props_vehicles/van001a_physics.mdl", "models/props_vehicles/wagon001a.mdl", "models/props_vehicles/wagon001a_phy.mdl"}
-    local Props_canal = {"models/props_canal/boat001a.mdl", "models/props_canal/boat001a_chunk01.mdl", "models/props_canal/boat001a_chunk010.mdl", "models/props_canal/boat001a_chunk02.mdl", "models/props_canal/boat001a_chunk03.mdl", "models/props_canal/boat001a_chunk04.mdl", "models/props_canal/boat001a_chunk05.mdl", "models/props_canal/boat001a_chunk06.mdl", "models/props_canal/boat001a_chunk07.mdl", "models/props_canal/boat001a_chunk08.mdl", "models/props_canal/boat001a_chunk09.mdl", "models/props_canal/boat001b.mdl", "models/props_canal/boat001b_chunk01.mdl", "models/props_canal/boat001b_chunk02.mdl", "models/props_canal/boat001b_chunk03.mdl", "models/props_canal/boat001b_chunk04.mdl", "models/props_canal/boat001b_chunk05.mdl", "models/props_canal/boat001b_chunk06.mdl", "models/props_canal/boat001b_chunk07.mdl", "models/props_canal/boat001b_chunk08.mdl", "models/props_canal/boat002b.mdl", "models/props_canal/boxcar_door.mdl", "models/props_canal/bridge_pillar02.mdl", "models/props_canal/canalmap001.mdl", "models/props_canal/canal_bars001.mdl", "models/props_canal/canal_bars001b.mdl", "models/props_canal/canal_bars001c.mdl", "models/props_canal/canal_bars002.mdl", "models/props_canal/canal_bars002b.mdl", "models/props_canal/canal_bars003.mdl", "models/props_canal/canal_bars004.mdl", "models/props_canal/canal_bridge01.mdl", "models/props_canal/canal_bridge01b.mdl", "models/props_canal/canal_bridge02.mdl", "models/props_canal/canal_bridge03a.mdl", "models/props_canal/canal_bridge03b.mdl", "models/props_canal/canal_bridge03c.mdl", "models/props_canal/canal_bridge04.mdl", "models/props_canal/canal_bridge_railing01.mdl", "models/props_canal/canal_bridge_railing02.mdl", "models/props_canal/canal_bridge_railing_lamps.mdl", "models/props_canal/canal_cap001.mdl", "models/props_canal/generator01.mdl", "models/props_canal/generator02.mdl", "models/props_canal/locks_large.mdl", "models/props_canal/locks_large_b.mdl", "models/props_canal/locks_small.mdl", "models/props_canal/locks_small_b.mdl", "models/props_canal/manhackmatt_doorslider.mdl", "models/props_canal/mattpipe.mdl", "models/props_canal/pipe_bracket001.mdl", "models/props_canal/refinery_01_skybox.mdl", "models/props_canal/refinery_02_skybox.mdl", "models/props_canal/refinery_03.mdl", "models/props_canal/refinery_03_skybox.mdl", "models/props_canal/refinery_04.mdl", "models/props_canal/refinery_05.mdl", "models/props_canal/refinery_05_skybox.mdl", "models/props_canal/rock_riverbed01a.mdl", "models/props_canal/rock_riverbed01b.mdl", "models/props_canal/rock_riverbed01c.mdl", "models/props_canal/rock_riverbed01d.mdl", "models/props_canal/rock_riverbed02a.mdl", "models/props_canal/rock_riverbed02b.mdl", "models/props_canal/rock_riverbed02c.mdl", "models/props_canal/winch01.mdl", "models/props_canal/winch01b.mdl", "models/props_canal/winch02.mdl", "models/props_canal/winch02b.mdl", "models/props_canal/winch02c.mdl", "models/props_canal/winch02d.mdl"}
+	local tool = self
+	if ( !tool ) then return end
 
+	self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
 
-    
-    local Models = {}
-    local Ents = {}
-
-    -- 1. Scrape every registered SENT (Scripted Entity) b
-    for class, _ in pairs(scripted_ents.GetList()) do
-        if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" then
-            table.insert(Ents, { type = "entity", class = class })
-        end
+	local Str = string.Split(trace.Entity:GetClass(), "_")
+    --PrintTable(Str)
+    if Str[1]=="flgm" or Str[1]=="prop" then
+        trace.Entity:EmitSound("friends/friend_online.wav")
+		if Str[1]=="prop"then
+			local phys = trace.Entity:GetPhysicsObject()
+			phys:EnableMotion(!phys:IsMotionEnabled())
+		end
     end
+end
 
-    -- 2. Scrape Sandbox Spawnlists (Entities, NPCs, Vehicles, Weapons)
-    local spawnableEntities = list.Get("SpawnableEntities")
-    if spawnableEntities then
-        for class, info in pairs(spawnableEntities) do
-            table.insert(Ents, { type = "entity", class = class })
-        end
-    end
+function SWEP:Think()
+	Pos = self:GetPos()
+end
 
-    local npcList = list.Get("NPC")
-    if npcList then
-        for class, info in pairs(npcList) do
-            table.insert(Ents, { type = "npc", class = class, model = info.Model })
-        end
-    end
 
-    local vehicleList = list.Get("Vehicles")
-    if vehicleList then
-        for class, info in pairs(vehicleList) do
-            table.insert(Ents, { type = "vehicle", class = class, model = info.Model, keyvalues = info.KeyValues })
-        end
-    end
+hook.Add("Tick", "", function()
+	--I give up. this is where its gonna be. remember it runs every tick!
+	--do your stuff in here
+	
 
-    local weaponList = weapons.GetList()
-    if weaponList then
-        for _, swep in pairs(weaponList) do
-            if swep.ClassName then
-                table.insert(Ents, { type = "weapon", class = swep.ClassName })
-            end
-        end
-    end
+	if CorruptedPropsAmount >= 10 and !Challange1Started then
+		print(CorruptedPropsAmount)
+		Challange1Started = true
+		GoalOnGoing = true
 
-    -- 3. Extract models from the visual spawnlists to mix with your base props
-    for i,v in pairs(Props_c17) do
-        table.insert(Models, table.Count(Models)-1, v)
-    end
+		print(Pos)
+		local Nav = navmesh.GetNearestNavArea(Pos, false, 10000, true, true)
 
-    for i,v in pairs(Props_WasteLand) do
-        table.insert(Models, table.Count(Models)-1, v)
-    end
-    
-    for i,v in pairs(Props_vehicles) do
-        table.insert(Models, table.Count(Models)-1, v)
-    end
+		if IsValid(Nav) then
 
-    for i,v in pairs(Props_canal) do
-        table.insert(Models, table.Count(Models)-1, v)
-    end
+			local RandPoint = Nav:GetRandomPoint()
+			local Goal = ents.Create("flgm_eventgoal")
+			Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
+			Goal:SetPos(RandPoint+Vector(0,0,100))
+			Goal.purpose = "test"
+			Goal:Spawn()
+			
+		end
 
-    -- fallback legacy defaults in case table scraping triggers ahead of early frames
-    table.insert(Ents, { type = "npc", class = "npc_helicopter" })
-    table.insert(Ents, { type = "entity", class = "gmod_light" })
+	end
 
-    -- Fallback safety array for pure physics debris loops
-    local BasePropsFallback = {
-        "models/props_c17/oildrum001_explosive.mdl", "models/props_c17/concrete_barrier001a.mdl",
-        "models/props_vehicles/car001a_hatchback.mdl", "models/props_junk/watermelon01.mdl",
-        "models/props_c17/furniturecouch001a.mdl", "models/props_vehicles/apc001.mdl"
-    }
-
-    -- Merge scraped models with fallback array
-    for _, fallbackModel in ipairs(BasePropsFallback) do
-        table.insert(Models, fallbackModel)
-    end
-
-    
-    local PropSpawnRate = 10
-
-    timer.Simple(10, function()
-        for _, v in pairs(player.GetAll()) do
-            v:Kill()
-        end
-    end)
-
-    timer.Create("PropSpawn", PropSpawnRate, 0, function()
-        if not TimerStart then 
-            print("############################\n### (Fluffy's gamemode)  ###\n###   Events started!    ###\n###                      ###\n############################")
-            TimerStart = true
-        end
-
-        PropSpawnRate = flgm_PropSpawnRate:GetFloat()
-
-        if not IsValid(owner) then return end
-        local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
-        
-        if IsValid(Nav) then
-            local RandInt = math.random(1, 3)
-            local RandPoint = Nav:GetRandomPoint()
-            
-            -- ACTION 1: Spawn a Random Model/Prop from the client spawnlists
-            if RandInt == 1 then
-                local chosenModel = Models[math.random(1, #Models)]
-                local prop = ents.Create("prop_physics")
-                if IsValid(prop) then
-                    prop:SetModel(chosenModel)
-                    prop:SetPos(RandPoint + Vector(0, 0, 2000)) -- Drop from the sky
-                    prop:Spawn()
-                end
-                
-            -- ACTION 2: Spawn a Spawner Registry Class Item (NPC, SENT, Weapon, Vehicle)
-            elseif RandInt == 2 then
-                local spawnData = Ents[math.random(1, #Ents)]
-                if not spawnData then return end
-
-                local spawnClass = spawnData.class
-                local objType = spawnData.type
-                local item
-
-                if objType == "npc" then
-                    item = ents.Create(spawnClass)
-                    if IsValid(item) then
-                        item:SetPos(RandPoint + Vector(0, 0, 40))
-                        item:Spawn()
-                        -- Give flyers a massive vertical boost
-                        if spawnClass == "npc_helicopter" or spawnClass == "npc_combinegunship" then
-                            item:SetPos(RandPoint + Vector(0, 0, 1800))
-                        end
-                    end
-
-                elseif objType == "vehicle" then
-                    -- Detect if it's a structural airboat style or wheeled platform
-                    item = ents.Create(spawnClass)
-                    if IsValid(item) then
-                        if spawnData.model then item:SetModel(spawnData.model) end
-                        if spawnData.keyvalues then
-                            for k, v in pairs(spawnData.keyvalues) do
-                                item:SetKeyValue(k, v)
-                            end
-                        end
-                        item:SetPos(RandPoint + Vector(0, 0, 5000))
-                        item:Spawn()
-                        item:Activate()
-                    end
-
-                elseif objType == "weapon" then
-                    -- Drop actual standalone grabable weapon scripts out of the sky
-                    item = ents.Create(spawnClass)
-                    if IsValid(item) then
-                        item:SetPos(RandPoint + Vector(0, 0, 1500))
-                        item:Spawn()
-                    end
-                else -- Default dynamic handling for typical SENTS/Entities
-                    item = ents.Create(spawnClass)
-                    if IsValid(item) then
-                        if spawnData.model then item:SetModel(spawnData.model) end
-                        item:SetPos(RandPoint + Vector(0, 0, 5000))
-                        item:Spawn()
-                    end
-                end
-            elseif RandInt == 3 then
-                local prop = ents.Create("flgm_corruptedprop")
-                if IsValid(prop) then
-                    prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
-                    prop:Spawn()
-                    local Physicsobj = prop:GetPhysicsObject()
-                    if IsValid(Physicsobj) then
-                        Physicsobj:Wake()
-                        Physicsobj:ApplyForceCenter(Vector(0, 0, -10))
-                    end
-                end
-            end
-            
-        else
-            print("let us in...")
-        end
-    end)
 end)
 
-hook.Add("ShutDown", "ServerStop", function()
-    EventStart = false
+hook.Add("flgm_GoalReached", "flgm_GoalReached", function(ply,purpose,pos)
+
+	if purpose == "test" then
+		local Reward = ents.Create("flgm_terminal")
+		Reward:SetPos(pos+Vector(0,0,50))
+		Reward:Spawn()
+		self:GetOwner():ChatPrint("A quest has started...")
+		GoalOnGoing = false
+	end
+
 end)
