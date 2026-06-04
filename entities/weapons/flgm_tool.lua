@@ -101,7 +101,7 @@ local GoalOnGoing = false
 
 function SWEP:PrimaryAttack()
 
-	if GoalOnGoing == true then
+	if !GoalOnGoing then
 
 		local trace = self:DoToolTrace()
 		if ( !trace ) then return end
@@ -145,6 +145,7 @@ function SWEP:PrimaryAttack()
 
 	else
 		self:GetOwner():PrintMessage(HUD_PRINTTALK, "You must complete the quest first!")
+		print(GoalOnGoing)
 	end
 
 end
@@ -179,6 +180,7 @@ hook.Add("Tick", "", function()
 	
 
 	if CorruptedPropsAmount > 5 and !Challange1Started then
+		print(CorruptedPropsAmount)
 		Challange1Started = true
 		GoalOnGoing = true
 		local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
