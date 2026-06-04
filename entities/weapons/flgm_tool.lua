@@ -133,7 +133,7 @@ function SWEP:PrimaryAttack()
 				end
 			end
 		end
-    elseif trace.Entity:IsWorld() then
+    elseif !trace.Entity:IsWorld() then
 		trace.Entity:EmitSound("friends/message.wav",0)
 		if ( SERVER ) then
 			trace.Entity:Remove()
