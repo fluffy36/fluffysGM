@@ -1,10 +1,6 @@
--- quest_system.lua
--- Tracks and manages corruption events, handles prop visual modifications, and updates quest states.
-
 if SERVER then
-    util.AddNetworkString("FLGM_UpdateQuestUI")
+    AddCSLuaFile()
 
-    -- Global Quest State Tracker
     FLGM_ActiveQuest = {
         Active = false,
         TargetEnt = nil,
@@ -13,22 +9,17 @@ if SERVER then
         CurrentPlayer = nil
     }
 
-    ---------------------------------------------------------
-    -- CORRUPTION MONITOR & VISUAL PATCHER
-    ---------------------------------------------------------
     local DynamicRewardsList = {}
 
     local function ScrapeRewardRegistry()
-        DynamicRewardsList = {} -- Reset
-
-        -- 1. Grab all Scripted Entities (SENTS)
+        DynamicRewardsList = {}
+        
         for class, _ in pairs(scripted_ents.GetList()) do
             if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" then
                 table.insert(DynamicRewardsList, { type = "entity", class = class })
             end
         end
 
-        -- 2. Grab Sandbox Entities List
         local spawnableEntities = list.Get("SpawnableEntities")
         if spawnableEntities then
             for class, _ in pairs(spawnableEntities) do
@@ -36,7 +27,6 @@ if SERVER then
             end
         end
 
-        -- 3. Grab NPCs
         local npcList = list.Get("NPC")
         if npcList then
             for class, info in pairs(npcList) do
@@ -44,106 +34,151 @@ if SERVER then
             end
         end
 
-        -- 4. Grab Vehicles
         local vehicleList = list.Get("Vehicles")
         if vehicleList then
             for class, info in pairs(vehicleList) do
                 table.insert(DynamicRewardsList, { type = "vehicle", class = class, model = info.Model, keyvalues = info.KeyValues })
             end
         end
+    end
 
-        -- Sync the global tracking metric cleanly
-        _G.CorruptedPropsAmount = currentEventCount
-
-        -- Broadcast status updates to all active clients for rendering/UI elements
-        net.Start("FLGM_UpdateQuestUI")
-            net.WriteInt(currentEventCount, 16)
-            net.WriteBool(QuestActive)
-        net.Broadcast()
+    hook.Add("Initialize", "FLGM_ScrapeOnLoad", function()
+        ScrapeRewardRegistry()
     end)
 
-    ---------------------------------------------------------
-    -- DESTRUCTION & PROGRESSION HOOK
-    ---------------------------------------------------------
     local function StartRandomQuest(ply)
         if #DynamicRewardsList == 0 then ScrapeRewardRegistry() end
 
-        -- Gather every single physical entity, npc, or prop currently alive in the world
         local allMapEntities = ents.GetAll()
         local validTargets = {}
 
+        ---------------------------------------------------------
+        -- STRICT EVENT FILTER MATRIX
+        ---------------------------------------------------------
         for _, ent in ipairs(allMapEntities) do
-            -- Filter out world geometry, players, and the quest-starting props themselves
-            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
+            -- Tracks down anything tagged as a falling sky entity from events.lua
+            if IsValid(ent) and ent.IsEventsLuaProp == true then
                 table.insert(validTargets, ent)
             end
         end
 
-        -- Verify if this was an explicit event item from events.lua
-        if target.IsEventsLuaProp then
-            local attacker = dmginfo:GetAttacker()
+        -- Handle sky timing delays safely
+        if #validTargets == 0 then
+            ply:ChatPrint("[Quest Engine] No custom props found on the map yet! Wait for the sky events to drop objects...")
+            -- Roll back counters so they can try click-triggering again instantly
+            FLGM_ActiveQuest.CorruptedDeleted = 9 
+            return
+        end
 
-            -- Detect if the damage is fatal
-            if (target:Health() > 0 and dmginfo:GetDamage() >= target:Health()) or (dmginfo:GetDamage() >= 100) or (target:GetPhysicsObject():GetMass() < 50 and dmginfo:IsDamageType(DMG_CRUSH)) then
-                
-                -- Guard against double-triggering before removal frame
-                if target.AlreadyDestroyedByQuest then return end
-                target.AlreadyDestroyedByQuest = true
+        local chosenTarget = validTargets[math.random(1, #validTargets)]
+        
+        FLGM_ActiveQuest.Active = true
+        FLGM_ActiveQuest.TargetEnt = chosenTarget
+        FLGM_ActiveQuest.CurrentPlayer = ply
+        
+        -- FIX: Handle fallback text names smoothly if the entity dropped doesn't use a standard .mdl file string (like weapons/SENTs)
+        local displayIdent = "Unknown Object"
+        local rawModel = chosenTarget:GetModel()
 
-                -- Trigger a subtle localized detonation effect to signal completion
-                local effectData = EffectData()
-                effectData:SetOrigin(target:WorldSpaceCenter())
-                effectData:SetScale(1)
-                util.Effect("vortigaunt_glow", effectData)
-                util.Effect("cball_explode", effectData)
+        if rawModel and rawModel ~= "" then
+            displayIdent = string.match(rawModel, ".*/(.*)%.mdl") or rawModel
+        else
+            displayIdent = chosenTarget:GetClass() -- Fall back to class name (e.g., weapon_muzzle) if model data is hidden
+        end
 
-                -- Give the destroyer a notification if it was a valid player
-                if IsValid(attacker) and attacker:IsPlayer() then
-                    attacker:ChatPrint("[QUEST] You purged a corrupted anomaly object!")
-                    -- Hook your economy/XP rewards framework right here if needed
+        FLGM_ActiveQuest.TargetName = displayIdent
+
+        ---------------------------------------------------------
+        -- VISUAL RED ALERT INDICATOR
+        ---------------------------------------------------------
+        -- Tint the selected prop bright solid red so it stands out immediately
+        chosenTarget:SetColor(Color(255, 0, 0, 255))
+        chosenTarget:SetRenderMode(RENDERMODE_TRANSCOLOR) -- Ensures transparency/color channels process cleanly
+
+        ply:PrintMessage(HUD_PRINTTALK, "========================================")
+        ply:PrintMessage(HUD_PRINTTALK, "[QUEST STARTED] A sky prop has been corrupted!")
+        ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. displayIdent .. " (Look for the one flashing RED!)")
+        ply:PrintMessage(HUD_PRINTTALK, "EQUIP: Use your flgm_tool to expunge it!")
+        ply:PrintMessage(HUD_PRINTTALK, "========================================")
+        
+        chosenTarget:EmitSound("ambient/machines/thumper_top.wav", 80, 130)
+    end
+
+    local function CompleteQuest(ply)
+        ply:PrintMessage(HUD_PRINTTALK, "========================================")
+        ply:PrintMessage(HUD_PRINTTALK, "[QUEST COMPLETE] Target successfully deleted!")
+        
+        local rewardData = DynamicRewardsList[math.random(1, #DynamicRewardsList)]
+        
+        if rewardData then
+            ply:PrintMessage(HUD_PRINTTALK, "REWARD EARNED: " .. rewardData.class .. " has been delivered!")
+            
+            local spawnPos = ply:GetPos() + Vector(0, 0, 150)
+            local rewardEnt = ents.Create(rewardData.class)
+            
+            if IsValid(rewardEnt) then
+                rewardEnt:SetPos(spawnPos)
+                if rewardData.model then rewardEnt:SetModel(rewardData.model) end
+                if rewardData.keyvalues then
+                    for k, v in pairs(rewardData.keyvalues) do
+                        rewardEnt:SetKeyValue(k, v)
+                    end
                 end
-
-                -- Decrement tracker instantly to keep UI highly responsive
-                _G.CorruptedPropsAmount = math.max(0, _G.CorruptedPropsAmount - 1)
+                rewardEnt:Spawn()
+                rewardEnt:Activate()
             end
         end
-    end)
+        ply:PrintMessage(HUD_PRINTTALK, "========================================")
 
-    -- Clean up entries cleanly if they get deleted by cleanup commands or Garry's Mod core mechanics
-    hook.Add("EntityRemoved", "FLGM_QuestEntityRemovedCleanup", function(ent)
-        if ent.IsEventsLuaProp and not ent.AlreadyDestroyedByQuest then
-            _G.CorruptedPropsAmount = math.max(0, _G.CorruptedPropsAmount - 1)
+        FLGM_ActiveQuest.Active = false
+        FLGM_ActiveQuest.TargetEnt = nil
+        FLGM_ActiveQuest.TargetName = "None"
+        FLGM_ActiveQuest.CorruptedDeleted = 0
+        FLGM_ActiveQuest.CurrentPlayer = nil
+    end
+
+    hook.Add("EntityRemoved", "FLGM_QuestDeletionTracker", function(ent)
+        if FLGM_ActiveQuest.Active and IsValid(FLGM_ActiveQuest.TargetEnt) and ent == FLGM_ActiveQuest.TargetEnt then
+            local ply = FLGM_ActiveQuest.CurrentPlayer
+            if IsValid(ply) then
+                CompleteQuest(ply)
+            end
+            return
+        end
+
+        if ent:GetClass() == "flgm_corruptedprop" then
+            for _, ply in ipairs(player.GetAll()) do
+                local activeWep = ply:GetActiveWeapon()
+                if IsValid(activeWep) and activeWep:GetClass() == "flgm_tool" then
+                    
+                    if FLGM_ActiveQuest.Active then
+                        ply:ChatPrint("[Quest Engine] ERROR: Complete your current tracking objective first! Target: " .. FLGM_ActiveQuest.TargetName)
+                        return 
+                    end
+
+                    FLGM_ActiveQuest.CorruptedDeleted = FLGM_ActiveQuest.CorruptedDeleted + 1
+                    local remaining = 10 - FLGM_ActiveQuest.CorruptedDeleted
+
+                    if remaining > 0 then
+                        ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/10) Destroy " .. remaining .. " more.")
+                    else
+                        ply:ChatPrint("[Quest Engine] Objective calculated. Finding a falling sky prop...")
+                        StartRandomQuest(ply)
+                    end
+                    break
+                end
+            end
         end
     end)
 end
 
----------------------------------------------------------
--- CLIENT SIDE INTERFACE MANAGEMENT
----------------------------------------------------------
 if CLIENT then
-    local localCorruptedCount = 0
-    local displayQuestHUD = false
-
-    net.Receive("FLGM_UpdateQuestUI", function()
-        localCorruptedCount = net.ReadInt(16)
-        displayQuestHUD = net.ReadBool()
-    end)
-
-    -- Simple modern screen paint loop to showcase active progression status
-    hook.Add("HUDPaint", "FLGM_DrawQuestStatus", function()
-        if not displayQuestHUD or localCorruptedCount <= 0 then return end
-
-        local padding = 15
-        local width, height = 240, 50
-        local x = ScrW() - width - padding
-        local y = padding + 120 -- Shifted downward slightly to clear default sandbox configurations
-
-        -- Background track container box panel
-        draw.RoundedBox(6, x, y, width, height, Color(20, 20, 20, 180))
-        draw.RoundedBox(6, x, y, 6, height, Color(220, 40, 40, 255)) -- Left crimson side badge border
-
-        -- Text display updates
-        draw.SimpleText("CRISIS: CORRUPTED ANOMALIES", "DermaDefaultBold", x + 16, y + 10, Color(240, 240, 240), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-        draw.SimpleText("Purge remaining targets: " .. localCorruptedCount, "DermaDefault", x + 16, y + 26, Color(200, 200, 200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    hook.Add("HUDPaint", "FLGM_QuestStatusDisplay", function()
+        if FLGM_ActiveQuest and FLGM_ActiveQuest.Active then
+            draw.RoundedBox(4, 20, 20, 320, 65, Color(0, 0, 0, 180))
+            draw.SimpleText("CURRENT OBJECTIVE:", "DermaDefaultBold", 30, 25, Color(255, 60, 60, 255))
+            draw.SimpleText("Find & Remove: " .. FLGM_ActiveQuest.TargetName, "DermaDefault", 30, 45, Color(255, 255, 255, 255))
+            draw.SimpleText("Status: Selected model turned RED", "DermaDefault", 30, 65, Color(200, 200, 200, 255))
+        end
     end)
 end
