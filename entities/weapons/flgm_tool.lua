@@ -179,11 +179,11 @@ hook.Add("Tick", "", function()
 	--do your stuff in here
 	
 
-	if CorruptedPropsAmount > 5 and !Challange1Started then
+	if CorruptedPropsAmount >= 5 and !Challange1Started then
 		print(CorruptedPropsAmount)
 		Challange1Started = true
 		GoalOnGoing = true
-		local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
+		local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
 
 		if IsValid(Nav) then
 
