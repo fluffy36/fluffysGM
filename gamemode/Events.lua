@@ -6,13 +6,6 @@ concommand.Add("flgm_restart_events", function(ply)
     hook.Run("PlayerInitialSpawn", ply)
 end)
 
-concommand.Add("flgm_find_sun", function(ply)
-    local sun = ents.FindByClass("env_sun")
-    if IsValid(sun[1]) then
-        sun[1]:Fire("LightOn")
-    end
-end)
-
 hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     if EventStart then return end
     EventStart = true
