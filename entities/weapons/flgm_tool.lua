@@ -116,7 +116,7 @@ function SWEP:PrimaryAttack()
         	trace.Entity:EmitSound("friends/friend_online.wav")
 		end
 		if Str[2]=="corruptedprop" then
-			self:EmitSound("resource/warning.wav")
+			self:EmitSound("resource/warning.wav",0)
 			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			if ( SERVER ) then
 				trace.Entity:Remove()
@@ -134,7 +134,7 @@ function SWEP:PrimaryAttack()
 			end
 		end
     else
-		trace.Entity:EmitSound("friends/message.wav")
+		trace.Entity:EmitSound("friends/message.wav",0)
 		if ( SERVER ) then
 			trace.Entity:Remove()
 			self:GetOwner():SetHealth(self:GetOwner():Health()+20)
