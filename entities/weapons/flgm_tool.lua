@@ -17,9 +17,6 @@ SWEP.WorldModel		= "models/weapons/w_toolgun.mdl"
 
 SWEP.UseHands = true
 
-util.PrecacheModel( SWEP.ViewModel )
-util.PrecacheModel( SWEP.WorldModel )
-
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 SWEP.Primary.Automatic = false
@@ -31,7 +28,7 @@ SWEP.Secondary.Automatic = false
 SWEP.Secondary.Ammo = "none"
 
 SWEP.HoldType = "revolver"
-
+local CorruptedPropsAmount = 0
 
 
 function SWEP:Initialize()
@@ -44,6 +41,10 @@ end
 function SWEP:Deploy()
     
 end
+
+concommand.Add("flgm_reset_corruptedpropsamount", function(ply)
+    CorruptedPropsAmount = 0
+end)
 
 -- The shoot effect
 function SWEP:DoShootEffect( hitpos, hitnormal, entity, physbone, bFirstTimePredicted )
@@ -99,43 +100,57 @@ function SWEP:DoToolTrace()
 
 	return trace
 end
-local CorruptedPropsAmount = 0
+
+local GoalOnGoing = false
+
 function SWEP:PrimaryAttack()
 
-    local trace = self:DoToolTrace()
-	if ( !trace ) then return end
+	if !GoalOnGoing then
 
-	local tool = self
-	if ( !tool ) then return end
+		local trace = self:DoToolTrace()
+		if ( !trace ) then return end
 
-	self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
-    local Str = string.Split(trace.Entity:GetClass(), "_")
-    --PrintTable(Str)
-    if Str[1]=="flgm" or Str[1]=="prop" then
-		if Str[1]~="flgm" and Str[2]~="corruptedprop" then
-        	trace.Entity:EmitSound("friends/friend_online.wav")
-		end
-		if Str[1]=="prop"then
-			trace.Entity:SetColor(Color(math.Rand(0, 255),math.Rand(0, 255),math.Rand(0, 255)))
-		elseif Str[1]=="flgm" and Str[2]=="corruptedprop" then
-			self:EmitSound("resource/warning.wav")
-			CorruptedPropsAmount = CorruptedPropsAmount + 1
+		local tool = self
+		if ( !tool ) then return end
+
+		self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
+		local Str = string.Split(trace.Entity:GetClass(), "_")
+		--PrintTable(Str)
+		if Str[1]=="flgm" then
+			if Str[2]=="corruptedprop" then
+				self:EmitSound("resource/warning.wav",0)
+				CorruptedPropsAmount = CorruptedPropsAmount + 1
+				if ( SERVER ) then
+					trace.Entity:Remove()
+					if self:GetOwner():Health() < 200 then
+						self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+					end
+					local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
+					--print(Nav)
+					if IsValid(Nav) or Nav ~= nil then
+						local RandPoint = Nav:GetRandomPoint()
+						Weapons = {"weapon_crowbar","weapon_physcannon","weapon_pistol","weapon_smg1","weapon_357","weapon_shotgun","weapon_crossbow","weapon_rpg"}
+
+						local wpn =  ents.Create(Weapons[math.random(1, table.Count(Weapons))])
+						wpn:SetPos(RandPoint+Vector(0,0,500))
+						wpn:Spawn()
+					end
+				end
+			end
+		elseif !trace.Entity:IsWorld() then
+			trace.Entity:EmitSound("friends/friend_join.wav",0)
 			if ( SERVER ) then
 				trace.Entity:Remove()
-				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
-				local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
-				--print(Nav)
-				if IsValid(Nav) or Nav ~= nil then
-					local RandPoint = Nav:GetRandomPoint()
-					Weapons = {"weapon_crowbar","weapon_physcannon","weapon_pistol","weapon_smg1","weapon_357","weapon_shotgun","weapon_crossbow","weapon_rpg"}
-
-					local wpn =  ents.Create(Weapons[math.random(1, table.Count(Weapons))])
-					wpn:SetPos(RandPoint+Vector(0,0,500))
-					wpn:Spawn()
+				if self:GetOwner():Health() < 200 then
+					self:GetOwner():SetHealth(self:GetOwner():Health()+20)
 				end
 			end
 		end
-    end
+
+	else
+		self:GetOwner():PrintMessage(HUD_PRINTTALK, "You must complete the quest first!")
+		print(GoalOnGoing)
+	end
 
 end
 
@@ -159,3 +174,50 @@ function SWEP:SecondaryAttack()
 		end
     end
 end
+
+function SWEP:Think()
+	Pos = self:GetPos()
+end
+
+local Challange1Started = false
+
+
+hook.Add("Tick", "", function()
+	--I give up. this is where its gonna be. remember it runs every tick!
+	--do your stuff in here
+	
+
+	if CorruptedPropsAmount >= 10 and !Challange1Started then
+		print(CorruptedPropsAmount)
+		Challange1Started = true
+		GoalOnGoing = true
+
+		print(Pos)
+		local Nav = navmesh.GetNearestNavArea(Pos, false, 10000, true, true)
+
+		if IsValid(Nav) then
+
+			local RandPoint = Nav:GetRandomPoint()
+			local Goal = ents.Create("flgm_eventgoal")
+			Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
+			Goal:SetPos(RandPoint+Vector(0,0,100))
+			Goal.purpose = "test"
+			Goal:Spawn()
+			
+		end
+
+	end
+
+end)
+
+hook.Add("flgm_GoalReached", "flgm_GoalReached", function(ply,purpose,pos)
+
+	if purpose == "test" then
+		local Reward = ents.Create("flgm_terminal")
+		Reward:SetPos(pos+Vector(0,0,50))
+		Reward:Spawn()
+
+		GoalOnGoing = false
+	end
+
+end)
