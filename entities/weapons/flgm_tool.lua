@@ -42,7 +42,9 @@ end
 
 
 function SWEP:Deploy()
-    
+    if !GetConVar("flgm_CorruptedPropsAmount") then
+		local flgm_CorruptedPropsAmount = CreateConVar("flgm_CorruptedPropsAmount",0,FCVAR_ARCHIVE,"dont use this please")
+	end
 end
 
 -- The shoot effect
