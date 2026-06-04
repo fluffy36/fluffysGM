@@ -1,3 +1,5 @@
-include("entities/weapons/flgm_tool.lua")
+local CorruptedPropsAmount = GetConVar("flgm_CorruptedPropsAmount")
 
-print(CorruptedPropsAmount)
+concommand.Add("flgm_checkcorruptedpropsamount", function()
+    print(CorruptedPropsAmount)
+end)

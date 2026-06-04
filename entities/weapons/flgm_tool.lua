@@ -32,7 +32,7 @@ SWEP.Secondary.Ammo = "none"
 
 SWEP.HoldType = "revolver"
 
-
+local flgm_CorruptedPropsAmount = CreateConVar("flgm_CorruptedPropsAmount",0,FCVAR_ARCHIVE,"dont use this please")
 
 function SWEP:Initialize()
     self:SetHoldType( self.HoldType )
@@ -117,7 +117,7 @@ function SWEP:PrimaryAttack()
 		end
 		if Str[2]=="corruptedprop" then
 			self:EmitSound("resource/warning.wav",0)
-			CorruptedPropsAmount = CorruptedPropsAmount + 1
+			flgm_CorruptedPropsAmount:SetFloat(flgm_CorruptedPropsAmount:GetFloat()+1)
 			if ( SERVER ) then
 				trace.Entity:Remove()
 				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
