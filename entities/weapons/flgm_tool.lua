@@ -117,7 +117,9 @@ function SWEP:PrimaryAttack()
 			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			if ( SERVER ) then
 				trace.Entity:Remove()
-				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+				if self:GetOwner():Health() < 200 then
+					self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+				end
 				local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
 				--print(Nav)
 				if IsValid(Nav) or Nav ~= nil then
@@ -134,7 +136,9 @@ function SWEP:PrimaryAttack()
 		trace.Entity:EmitSound("friends/message.wav",0)
 		if ( SERVER ) then
 			trace.Entity:Remove()
-			self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+			if self:GetOwner():Health() < 200 then
+				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+			end
 		end
 	end
 
