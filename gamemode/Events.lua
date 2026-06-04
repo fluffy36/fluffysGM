@@ -179,14 +179,29 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     end
                 end
             elseif RandInt == 3 then
-                local prop = ents.Create("flgm_corruptedprop")
-                if IsValid(prop) then
-                    prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
-                    prop:Spawn()
-                    local Physicsobj = prop:GetPhysicsObject()
-                    if IsValid(Physicsobj) then
-                        Physicsobj:Wake()
-                        Physicsobj:ApplyForceCenter(Vector(0, 0, -10))
+                local change = math.random(0, 10)
+
+                if change <10 then
+                    local prop = ents.Create("flgm_corruptedprop")
+                    if IsValid(prop) then
+                        prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
+                        prop:Spawn()
+                        local Physicsobj = prop:GetPhysicsObject()
+                        if IsValid(Physicsobj) then
+                            Physicsobj:Wake()
+                            Physicsobj:ApplyForceCenter(Vector(0, 0, -10))
+                        end
+                    end
+                else
+                    local prop = ents.Create("flgm_evilcorruptedcube")
+                    if IsValid(prop) then
+                        prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
+                        prop:Spawn()
+                        local Physicsobj = prop:GetPhysicsObject()
+                        if IsValid(Physicsobj) then
+                            Physicsobj:Wake()
+                            Physicsobj:ApplyForceCenter(Vector(0, 0, -10))
+                        end
                     end
                 end
             end
