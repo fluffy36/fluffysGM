@@ -10,6 +10,7 @@ function ENT:Initialize()
     
     if ( SERVER ) then
 
+        -- adda a random model thing
         self:SetModel("models/hunter/blocks/cube075x075x075.mdl")
         self:SetMoveType(MOVETYPE_VPHYSICS)
         self:PhysicsInit(SOLID_VPHYSICS)
