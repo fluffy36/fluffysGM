@@ -3,7 +3,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 
-ENT.PrintName = "Corrupted prop"
+ENT.PrintName = "Evil Corrupted prop"
 ENT.Author = "Fluffy"
 ENT.Category = "Fluffy's gamemode"
 ENT.Spawnable = true

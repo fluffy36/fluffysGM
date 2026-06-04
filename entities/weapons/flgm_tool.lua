@@ -117,7 +117,9 @@ function SWEP:PrimaryAttack()
 		local Str = string.Split(trace.Entity:GetClass(), "_")
 		--PrintTable(Str)
 		if Str[1]=="flgm" then
-			trace.Entity:Remove()
+			if SERVER then
+				trace.Entity:Remove()
+			end
 			if Str[2]=="corruptedprop" then
 				self:EmitSound("resource/warning.wav",0)
 				CorruptedPropsAmount = CorruptedPropsAmount + 1
