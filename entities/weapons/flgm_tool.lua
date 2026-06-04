@@ -185,19 +185,16 @@ function SWEP:Think()
 	Pos = self:GetPos()
 end
 
-local Challange1Started = false
-
 
 hook.Add("Tick", "", function()
 	--I give up. this is where its gonna be. remember it runs every tick!
 	--do your stuff in here
 	
 
-	if CorruptedPropsAmount >= 10 and !Challange1Started then
-		GoalOnGoing = true
+	if CorruptedPropsAmount >= 10 and !GoalOnGoing then
 		
 		self:GetOwner():PrintMessage(HUD_PRINTTALK, "A quest has started")
-		local NavR = navmesh.GetNavArea(Pos, -500)
+		local NavR = navmesh.GetNavArea(Pos, 0)
 		local Nav = NavR[math.random(1, table.Count(NavR))]
 		print(Nav)
 		if IsValid(Nav) then
@@ -209,7 +206,7 @@ hook.Add("Tick", "", function()
 			Goal:SetPos(RandPoint+Vector(0,0,100))
 			Goal.purpose = "test"
 			Goal:Spawn()
-			Challange1Started = true
+			GoalOnGoing = true
 			
 		else
 			return
