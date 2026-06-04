@@ -195,6 +195,7 @@ hook.Add("Tick", "", function()
 				Goal:Spawn()
 			end
 			print(RandPoint+Vector(0,0,100))
+		end
 
 	end
 
