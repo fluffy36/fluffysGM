@@ -97,7 +97,11 @@ function SWEP:DoToolTrace()
 	return trace
 end
 
+local GoalOnGoing = false
+
 function SWEP:PrimaryAttack()
+
+	if GoalOnGoing then
 
     local trace = self:DoToolTrace()
 	if ( !trace ) then return end
@@ -139,6 +143,10 @@ function SWEP:PrimaryAttack()
 		end
 	end
 
+	else
+		self:GetOwner():PrintMessage(HUD_PRINTTALK, "You must complete the quest first!")
+	end
+
 end
 
 function SWEP:SecondaryAttack()
@@ -162,11 +170,44 @@ function SWEP:SecondaryAttack()
     end
 end
 
+
+local Challange1Started=false
+
 hook.Add("Tick", "", function()
 	--I give up. this is where its gonna be. remember it runs every tick!
 	--do your stuff in here
-	if CorruptedPropsAmount > 10 then
+	
+
+	if CorruptedPropsAmount > 1 and !Challange1Started then
+		Challange1Started = true
+		GoalOnGoing = true
+		local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
+
+		if IsValid(Nav) then
+
+			local RandPoint = Nav:GetRandomPoint()
+
+			local Goal = ents.Create("flgm_eventgoal")
+			if IsValid(Goal) then
+				Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
+				Goal:SetPos(RandPoint+Vector(0,0,100))
+				Goal.purpose = "test"
+				Goal:Spawn()
+			end
+			print(RandPoint+Vector(0,0,100))
 
 	end
-	
+
+end)
+
+hook.Add("flgm_GoalReached", "flgm_GoalReached", function(ply,purpose)
+
+	if purpose == "test" then
+		local Reward = ents.Create("flgm_terminal")
+		Reward:SetPos(ply:GetPos()+Vector(0,0,100))
+		Reward:Spawn()
+
+		GoalOnGoing = false
+	end
+
 end)
