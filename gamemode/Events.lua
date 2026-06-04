@@ -1,5 +1,6 @@
 local EventStart = false
 local flgm_PropSpawnRate = CreateConVar("flgm_PropSpawnRate", 4, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Sets prop spawn rate of items in the air")
+GAMEMODE.CorruptedPropsAmount = 0
 local TimerStart = false
 
 concommand.Add("flgm_restart_events", function(ply)

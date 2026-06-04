@@ -99,7 +99,7 @@ function SWEP:DoToolTrace()
 
 	return trace
 end
-CorruptedPropsAmount = 0
+
 function SWEP:PrimaryAttack()
 
     local trace = self:DoToolTrace()
@@ -117,7 +117,7 @@ function SWEP:PrimaryAttack()
 		end
 		if Str[2]=="corruptedprop" then
 			self:EmitSound("resource/warning.wav",0)
-			CorruptedPropsAmount = CorruptedPropsAmount + 1
+			GAMEMODE.CorruptedPropsAmount = GAMEMODE.CorruptedPropsAmount + 1
 			if ( SERVER ) then
 				trace.Entity:Remove()
 				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
