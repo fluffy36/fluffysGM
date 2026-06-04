@@ -42,6 +42,10 @@ function SWEP:Deploy()
     
 end
 
+concommand.Add("flgm_restart_events", function(ply)
+    CorruptedPropsAmount = 0
+end)
+
 -- The shoot effect
 function SWEP:DoShootEffect( hitpos, hitnormal, entity, physbone, bFirstTimePredicted )
 
