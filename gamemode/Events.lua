@@ -184,7 +184,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
                     prop:Spawn()
                     local Physicsobj = prop:GetPhysicsObject()
-                    print(IsValdi(Physicsobj))
+                    print(IsValdid(Physicsobj))
                     if IsValid(Physicsobj) then
                         Physicsobj:Wake()
                         Physicsobj:ApplyForceCenter(Vector(0, 0, -10))
