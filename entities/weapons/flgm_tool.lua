@@ -185,31 +185,31 @@ function SWEP:Think()
 	Pos = self:GetPos()
 end
 
-local Challange1Started = false
-
 
 hook.Add("Tick", "", function()
 	--I give up. this is where its gonna be. remember it runs every tick!
 	--do your stuff in here
 	
 
-	if CorruptedPropsAmount >= 10 and !Challange1Started then
-		print(CorruptedPropsAmount)
-		Challange1Started = true
-		GoalOnGoing = true
-
-		print(Pos)
-		local Nav = navmesh.GetNearestNavArea(Pos, false, 10000, true, true)
-
+	if CorruptedPropsAmount >= 10 and !GoalOnGoing then
+		
+		self:GetOwner():PrintMessage(HUD_PRINTTALK, "A quest has started")
+		local NavR = navmesh.GetNavArea(Pos, 0)
+		local Nav = NavR[math.random(1, table.Count(NavR))]
+		print(Nav)
 		if IsValid(Nav) then
-
+			
 			local RandPoint = Nav:GetRandomPoint()
+			print(RandPoint)
 			local Goal = ents.Create("flgm_eventgoal")
 			Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
 			Goal:SetPos(RandPoint+Vector(0,0,100))
 			Goal.purpose = "test"
 			Goal:Spawn()
+			GoalOnGoing = true
 			
+		else
+			return
 		end
 
 	end
@@ -222,7 +222,7 @@ hook.Add("flgm_GoalReached", "flgm_GoalReached", function(ply,purpose,pos)
 		local Reward = ents.Create("flgm_terminal")
 		Reward:SetPos(pos+Vector(0,0,50))
 		Reward:Spawn()
-
+		self:GetOwner():ChatPrint("A quest has started...")
 		GoalOnGoing = false
 	end
 
