@@ -1,203 +1,134 @@
+-- quest_system.lua
+-- Tracks and manages corruption events, handles prop visual modifications, and updates quest states.
+
 if SERVER then
-    AddCSLuaFile()
+    util.AddNetworkString("FLGM_UpdateQuestUI")
 
-    -- Global Quest State Tracker
-    FLGM_ActiveQuest = {
-        Active = false,
-        TargetEnt = nil,
-        TargetName = "None",
-        CorruptedDeleted = 0,
-        CurrentPlayer = nil
-    }
+    -- Configuration variables
+    local QuestActive = true
+    local TargetCorruptionColor = Color(255, 0, 0, 255) -- Crimson Corrupted Red
+    local TargetCorruptionMaterial = "models/debug/debugwhite" -- Smooth unshaded texture for neon effect
 
     ---------------------------------------------------------
-    -- AUTOMATED GLOBAL SPAWNMENU REGISTRY SCRAPER (No Props)
+    -- CORRUPTION MONITOR & VISUAL PATCHER
     ---------------------------------------------------------
-    local DynamicRewardsList = {}
+    -- Constantly checks for active event props, transforms them, and prunes stale data
+    timer.Create("FLGM_QuestPropProcessor", 0.5, 0, function()
+        if not QuestActive then return end
 
-    local function ScrapeRewardRegistry()
-        DynamicRewardsList = {} -- Reset
+        local currentEventCount = 0
+        local allProps = ents.FindByClass("prop_physics")
 
-        -- 1. Grab all Scripted Entities (SENTS)
-        for class, _ in pairs(scripted_ents.GetList()) do
-            if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" then
-                table.insert(DynamicRewardsList, { type = "entity", class = class })
+        for _, prop in ipairs(allProps) do
+            if IsValid(prop) and prop.IsEventsLuaProp then
+                currentEventCount = currentEventCount + 1
+
+                -- If the prop hasn't been visually corrupted yet, apply the effects
+                if not prop.IsCorruptedVisualApplied then
+                    prop:SetColor(TargetCorruptionColor)
+                    prop:SetMaterial(TargetCorruptionMaterial)
+                    prop:DrawShadow(false) -- Makes it look like it's glowing slightly
+                    
+                    -- Optional: add a slight red dynamic glow around it
+                    local glow = ents.Create("env_sprite")
+                    if IsValid(glow) then
+                        glow:SetKeyValue("model", "sprites/light_glow01.vmt")
+                        glow:SetKeyValue("rendercolor", "255 0 0")
+                        glow:SetKeyValue("renderamt", "200")
+                        glow:SetKeyValue("modelscale", "1.5")
+                        glow:SetPos(prop:WorldSpaceCenter())
+                        glow:SetParent(prop)
+                        glow:Spawn()
+                    end
+
+                    prop.IsCorruptedVisualApplied = true
+                end
             end
         end
 
-        -- 2. Grab Sandbox Entities List
-        local spawnableEntities = list.Get("SpawnableEntities")
-        if spawnableEntities then
-            for class, _ in pairs(spawnableEntities) do
-                table.insert(DynamicRewardsList, { type = "entity", class = class })
-            end
-        end
+        -- Sync the global tracking metric cleanly
+        _G.CorruptedPropsAmount = currentEventCount
 
-        -- 3. Grab NPCs
-        local npcList = list.Get("NPC")
-        if npcList then
-            for class, info in pairs(npcList) do
-                table.insert(DynamicRewardsList, { type = "npc", class = class, model = info.Model })
-            end
-        end
-
-        -- 4. Grab Vehicles
-        local vehicleList = list.Get("Vehicles")
-        if vehicleList then
-            for class, info in pairs(vehicleList) do
-                table.insert(DynamicRewardsList, { type = "vehicle", class = class, model = info.Model, keyvalues = info.KeyValues })
-            end
-        end
-
-        -- Fallback defaults if tables aren't fully populated on instant frame load
-        if #DynamicRewardsList == 0 then
-            table.insert(DynamicRewardsList, { type = "npc", class = "npc_helicopter" })
-            table.insert(DynamicRewardsList, { type = "entity", class = "gmod_light" })
-        end
-    end
-
-    -- Run the scraper once components initialize
-    hook.Add("Initialize", "FLGM_ScrapeOnLoad", function()
-        ScrapeRewardRegistry()
+        -- Broadcast status updates to all active clients for rendering/UI elements
+        net.Start("FLGM_UpdateQuestUI")
+            net.WriteInt(currentEventCount, 16)
+            net.WriteBool(QuestActive)
+        net.Broadcast()
     end)
 
     ---------------------------------------------------------
-    -- QUEST LOGIC CONTROLLER
+    -- DESTRUCTION & PROGRESSION HOOK
     ---------------------------------------------------------
-    local function StartRandomQuest(ply)
-        if #DynamicRewardsList == 0 then ScrapeRewardRegistry() end
+    -- Fires whenever an entity takes damage; catches when players destroy event props
+    hook.Add("EntityTakeDamage", "FLGM_TrackQuestDestruction", function(target, dmginfo)
+        if not QuestActive then return end
+        if not IsValid(target) or target:GetClass() ~= "prop_physics" then return end
 
-        -- Gather every single physical entity, npc, or prop currently alive in the world
-        local allMapEntities = ents.GetAll()
-        local validTargets = {}
+        -- Verify if this was an explicit event item from events.lua
+        if target.IsEventsLuaProp then
+            local attacker = dmginfo:GetAttacker()
 
-        for _, ent in ipairs(allMapEntities) do
-            -- Filter out world geometry, players, and the quest-starting props themselves
-            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
-                table.insert(validTargets, ent)
-            end
-        end
+            -- Detect if the damage is fatal
+            if (target:Health() > 0 and dmginfo:GetDamage() >= target:Health()) or (dmginfo:GetDamage() >= 100) or (target:GetPhysicsObject():GetMass() < 50 and dmginfo:IsDamageType(DMG_CRUSH)) then
+                
+                -- Guard against double-triggering before removal frame
+                if target.AlreadyDestroyedByQuest then return end
+                target.AlreadyDestroyedByQuest = true
 
-        -- Safety fallback: if the map is completely empty, spawn a random object into the sky to hunt
-        if #validTargets == 0 then
-            ply:ChatPrint("[Quest Engine] The map is empty! Spawning a target entity automatically...")
-            return
-        end
+                -- Trigger a subtle localized detonation effect to signal completion
+                local effectData = EffectData()
+                effectData:SetOrigin(target:WorldSpaceCenter())
+                effectData:SetScale(1)
+                util.Effect("vortigaunt_glow", effectData)
+                util.Effect("cball_explode", effectData)
 
-        -- Pick a completely random target entity from the map
-        local chosenTarget = validTargets[math.random(1, #validTargets)]
-        
-        FLGM_ActiveQuest.Active = true
-        FLGM_ActiveQuest.TargetEnt = chosenTarget
-        FLGM_ActiveQuest.CurrentPlayer = ply
-        
-        -- Clean up print names for the chat prompt
-        local readableName = chosenTarget.PrintName or chosenTarget:GetClass()
-        FLGM_ActiveQuest.TargetName = readableName
-
-        -- Notify the target player
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
-        ply:PrintMessage(HUD_PRINTTALK, "[QUEST STARTED] Find and eliminate the glitched target!")
-        ply:PrintMessage(HUD_PRINTTALK, "TARGET OBJECT: " .. readableName .. " (ID: #" .. chosenTarget:EntIndex() .. ")")
-        ply:PrintMessage(HUD_PRINTTALK, "EQUIP: Use your flgm_tool to delete it!")
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
-        
-        -- Halo or spark highlight the target entity briefly so the player knows where it dropped
-        chosenTarget:EmitSound("ambient/machines/thumper_top.wav", 80, 130)
-    end
-
-    local function CompleteQuest(ply)
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
-        ply:PrintMessage(HUD_PRINTTALK, "[QUEST COMPLETE] Target successfully expunged from memory!")
-        
-        -- Pick a random dynamic reward (strictly NPCs or SENTS, no pure prop models)
-        local rewardData = DynamicRewardsList[math.random(1, #DynamicRewardsList)]
-        
-        if rewardData then
-            ply:PrintMessage(HUD_PRINTTALK, "REWARD EARNED: A custom " .. rewardData.class .. " has been granted!")
-            
-            -- Spawn the reward right above the winning player's head
-            local spawnPos = ply:GetPos() + Vector(0, 0, 150)
-            local rewardEnt = ents.Create(rewardData.class)
-            
-            if IsValid(rewardEnt) then
-                rewardEnt:SetPos(spawnPos)
-                if rewardData.model then rewardEnt:SetModel(rewardData.model) end
-                if rewardData.keyvalues then
-                    for k, v in pairs(rewardData.keyvalues) do
-                        rewardEnt:SetKeyValue(k, v)
-                    end
+                -- Give the destroyer a notification if it was a valid player
+                if IsValid(attacker) and attacker:IsPlayer() then
+                    attacker:ChatPrint("[QUEST] You purged a corrupted anomaly object!")
+                    -- Hook your economy/XP rewards framework right here if needed
                 end
-                rewardEnt:Spawn()
-                rewardEnt:Activate()
+
+                -- Decrement tracker instantly to keep UI highly responsive
+                _G.CorruptedPropsAmount = math.max(0, _G.CorruptedPropsAmount - 1)
             end
         end
-        ply:PrintMessage(HUD_PRINTTALK, "========================================")
+    end)
 
-        -- Reset states completely so the player can restart it by mining corrupted props again
-        FLGM_ActiveQuest.Active = false
-        FLGM_ActiveQuest.TargetEnt = nil
-        FLGM_ActiveQuest.TargetName = "None"
-        FLGM_ActiveQuest.CorruptedDeleted = 0
-        FLGM_ActiveQuest.CurrentPlayer = nil
-    end
-
-    ---------------------------------------------------------
-    -- ENGINE TOOL DETECTION INTERCEPTORS
-    ---------------------------------------------------------
-    -- This hook catches whenever an entity is deleted on the server
-    hook.Add("EntityRemoved", "FLGM_QuestDeletionTracker", function(ent)
-        -- 1. TRACK THE TARGET HUNT DETECTION:
-        if FLGM_ActiveQuest.Active and IsValid(FLGM_ActiveQuest.TargetEnt) and ent == FLGM_ActiveQuest.TargetEnt then
-            local ply = FLGM_ActiveQuest.CurrentPlayer
-            if IsValid(ply) then
-                CompleteQuest(ply)
-            end
-            return
-        end
-
-        -- 2. TRACK CORRUPTED PROP MINING TO UNLOCK THE QUEST:
-        if ent:GetClass() == "flgm_corruptedprop" then
-            -- Find the player holding your custom tool gun
-            for _, ply in ipairs(player.GetAll()) do
-                local activeWep = ply:GetActiveWeapon()
-                if IsValid(activeWep) and activeWep:GetClass() == "flgm_tool" then
-                    
-                    ---------------------------------------------------------
-                    -- INTERCEPT: ACTIVE QUEST BLOCKER
-                    ---------------------------------------------------------
-                    -- If a quest is already active, refuse to count or progress toward a new one
-                    if FLGM_ActiveQuest.Active then
-                        ply:ChatPrint("[Quest Engine] ERROR: You must complete the current quest first! Target: " .. FLGM_ActiveQuest.TargetName)
-                        return 
-                    end
-
-                    FLGM_ActiveQuest.CorruptedDeleted = FLGM_ActiveQuest.CorruptedDeleted + 1
-                    local remaining = 10 - FLGM_ActiveQuest.CorruptedDeleted
-
-                    if remaining > 0 then
-                        ply:ChatPrint("[Quest Engine] Corrupted entity neutralized. (" .. FLGM_ActiveQuest.CorruptedDeleted .. "/10) Destroy " .. remaining .. " more to activate quest.")
-                    else
-                        ply:ChatPrint("[Quest Engine] Critical threshold met! Initializing world tracking matrix...")
-                        StartRandomQuest(ply)
-                    end
-                    break
-                end
-            end
+    -- Clean up entries cleanly if they get deleted by cleanup commands or Garry's Mod core mechanics
+    hook.Add("EntityRemoved", "FLGM_QuestEntityRemovedCleanup", function(ent)
+        if ent.IsEventsLuaProp and not ent.AlreadyDestroyedByQuest then
+            _G.CorruptedPropsAmount = math.max(0, _G.CorruptedPropsAmount - 1)
         end
     end)
 end
 
 ---------------------------------------------------------
--- OPTIONAL HUD SYNC DISPLAY (Client-Side)
+-- CLIENT SIDE INTERFACE MANAGEMENT
 ---------------------------------------------------------
 if CLIENT then
-    hook.Add("HUDPaint", "FLGM_QuestStatusDisplay", function()
-        if FLGM_ActiveQuest and FLGM_ActiveQuest.Active then
-            draw.RoundedBox(4, 20, 20, 300, 65, Color(0, 0, 0, 180))
-            draw.SimpleText("CURRENT OBJECTIVE:", "DermaDefaultBold", 30, 25, Color(255, 60, 60, 255))
-            draw.SimpleText("Find & Remove: " .. FLGM_ActiveQuest.TargetName, "DermaDefault", 30, 45, Color(255, 255, 255, 255))
-            draw.SimpleText("Weapon Required: flgm_tool", "DermaDefault", 30, 65, Color(200, 200, 200, 255))
-        end
+    local localCorruptedCount = 0
+    local displayQuestHUD = false
+
+    net.Receive("FLGM_UpdateQuestUI", function()
+        localCorruptedCount = net.ReadInt(16)
+        displayQuestHUD = net.ReadBool()
+    end)
+
+    -- Simple modern screen paint loop to showcase active progression status
+    hook.Add("HUDPaint", "FLGM_DrawQuestStatus", function()
+        if not displayQuestHUD or localCorruptedCount <= 0 then return end
+
+        local padding = 15
+        local width, height = 240, 50
+        local x = ScrW() - width - padding
+        local y = padding + 120 -- Shifted downward slightly to clear default sandbox configurations
+
+        -- Background track container box panel
+        draw.RoundedBox(6, x, y, width, height, Color(20, 20, 20, 180))
+        draw.RoundedBox(6, x, y, 6, height, Color(220, 40, 40, 255)) -- Left crimson side badge border
+
+        -- Text display updates
+        draw.SimpleText("CRISIS: CORRUPTED ANOMALIES", "DermaDefaultBold", x + 16, y + 10, Color(240, 240, 240), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Purge remaining targets: " .. localCorruptedCount, "DermaDefault", x + 16, y + 26, Color(200, 200, 200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
     end)
 end
