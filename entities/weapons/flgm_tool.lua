@@ -136,7 +136,7 @@ function SWEP:PrimaryAttack()
 						wpn:Spawn()
 					end
 				end
-			elseif Str[2]=="evilcorruptedcube" then
+			elseif Str[2]=="evilcorruptedcube" or Str[2]=="err0126" then
 				self:EmitSound("buttons/blip1.wav",0)
 				
 				if ( SERVER ) then
