@@ -183,12 +183,12 @@ hook.Add("Tick", "", function()
 		print(CorruptedPropsAmount)
 		Challange1Started = true
 		GoalOnGoing = true
-		local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
+		local Nav = navmesh.GetNearestNavArea(self:GetPos(), false, 10000, true, true)
 
 		if IsValid(Nav) then
 
 			local RandPoint = Nav:GetRandomPoint()
-
+			print(RandPoint+Vector(0,0,100))
 			local Goal = ents.Create("flgm_eventgoal")
 			if IsValid(Goal) then
 				Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
@@ -196,7 +196,7 @@ hook.Add("Tick", "", function()
 				Goal.purpose = "test"
 				Goal:Spawn()
 			end
-			print(RandPoint+Vector(0,0,100))
+			
 		end
 
 	end
