@@ -1,4 +1,4 @@
-if SERVER then
+if SERVER and IsValid(Googoagaag) then
     AddCSLuaFile()
 
 
@@ -88,7 +88,7 @@ if SERVER then
 
         for _, ent in ipairs(allMapEntities) do
             -- Filter out world geometry, players, and the quest-starting props themselves
-            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" and ent:GetClas() ~= "hint" then
+            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" and ent:GetClas() ~= "hint" and ent:GetClas() ~= "light" then
                 table.insert(validTargets, ent)
             end
         end

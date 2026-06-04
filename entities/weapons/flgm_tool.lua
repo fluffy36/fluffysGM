@@ -194,9 +194,8 @@ hook.Add("Tick", "", function()
 	if CorruptedPropsAmount >= 10 and !GoalOnGoing then
 		
 		self:GetOwner():PrintMessage(HUD_PRINTTALK, "A quest has started")
-		local NavR = navmesh.GetNavArea(Pos, 0)
-		local Nav = NavR[math.random(1, table.Count(NavR))]
-		print(Nav)
+		local Nav = navmesh.GetNearestNavArea(Pos+Vector(math.random(-5000, 5000)), false, 1000000, false, checkGround=true)
+		--print(Nav)
 		if IsValid(Nav) then
 			
 			local RandPoint = Nav:GetRandomPoint()
