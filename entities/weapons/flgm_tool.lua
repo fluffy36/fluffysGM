@@ -200,8 +200,9 @@ hook.Add("Tick", "", function()
 		local NavR = navmesh.GetNavArea(Pos, -500)
 		local Nav = NavR[math.random(1, table.Count(NavR))]
 		if IsValid(Nav) then
-
+			
 			local RandPoint = Nav:GetRandomPoint()
+			print(RandPoint)
 			local Goal = ents.Create("flgm_eventgoal")
 			Goal:SetModel("models/props_c17/FurnitureFridge001a.mdl")
 			Goal:SetPos(RandPoint+Vector(0,0,100))
