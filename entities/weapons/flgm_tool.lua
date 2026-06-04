@@ -101,47 +101,47 @@ local GoalOnGoing = false
 
 function SWEP:PrimaryAttack()
 
-	if GoalOnGoing then
+	if GoalOnGoing == true then
 
-    local trace = self:DoToolTrace()
-	if ( !trace ) then return end
+		local trace = self:DoToolTrace()
+		if ( !trace ) then return end
 
-	local tool = self
-	if ( !tool ) then return end
+		local tool = self
+		if ( !tool ) then return end
 
-	self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
-    local Str = string.Split(trace.Entity:GetClass(), "_")
-    --PrintTable(Str)
-    if Str[1]=="flgm" then
-		if Str[2]=="corruptedprop" then
-			self:EmitSound("resource/warning.wav",0)
-			CorruptedPropsAmount = CorruptedPropsAmount + 1
+		self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
+		local Str = string.Split(trace.Entity:GetClass(), "_")
+		--PrintTable(Str)
+		if Str[1]=="flgm" then
+			if Str[2]=="corruptedprop" then
+				self:EmitSound("resource/warning.wav",0)
+				CorruptedPropsAmount = CorruptedPropsAmount + 1
+				if ( SERVER ) then
+					trace.Entity:Remove()
+					if self:GetOwner():Health() < 200 then
+						self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+					end
+					local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
+					--print(Nav)
+					if IsValid(Nav) or Nav ~= nil then
+						local RandPoint = Nav:GetRandomPoint()
+						Weapons = {"weapon_crowbar","weapon_physcannon","weapon_pistol","weapon_smg1","weapon_357","weapon_shotgun","weapon_crossbow","weapon_rpg"}
+
+						local wpn =  ents.Create(Weapons[math.random(1, table.Count(Weapons))])
+						wpn:SetPos(RandPoint+Vector(0,0,500))
+						wpn:Spawn()
+					end
+				end
+			end
+		elseif !trace.Entity:IsWorld() then
+			trace.Entity:EmitSound("friends/friend_join.wav",0)
 			if ( SERVER ) then
 				trace.Entity:Remove()
 				if self:GetOwner():Health() < 200 then
 					self:GetOwner():SetHealth(self:GetOwner():Health()+20)
 				end
-				local Nav = navmesh.GetNearestNavArea(self:GetOwner():GetPos(), false, 10000, true, true)
-				--print(Nav)
-				if IsValid(Nav) or Nav ~= nil then
-					local RandPoint = Nav:GetRandomPoint()
-					Weapons = {"weapon_crowbar","weapon_physcannon","weapon_pistol","weapon_smg1","weapon_357","weapon_shotgun","weapon_crossbow","weapon_rpg"}
-
-					local wpn =  ents.Create(Weapons[math.random(1, table.Count(Weapons))])
-					wpn:SetPos(RandPoint+Vector(0,0,500))
-					wpn:Spawn()
-				end
 			end
 		end
-    elseif !trace.Entity:IsWorld() then
-		trace.Entity:EmitSound("friends/friend_join.wav",0)
-		if ( SERVER ) then
-			trace.Entity:Remove()
-			if self:GetOwner():Health() < 200 then
-				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
-			end
-		end
-	end
 
 	else
 		self:GetOwner():PrintMessage(HUD_PRINTTALK, "You must complete the quest first!")
@@ -171,14 +171,14 @@ function SWEP:SecondaryAttack()
 end
 
 
-local Challange1Started=false
+local Challange1Started = false
 
 hook.Add("Tick", "", function()
 	--I give up. this is where its gonna be. remember it runs every tick!
 	--do your stuff in here
 	
 
-	if CorruptedPropsAmount > 1 and !Challange1Started then
+	if CorruptedPropsAmount > 5 and !Challange1Started then
 		Challange1Started = true
 		GoalOnGoing = true
 		local Nav = navmesh.GetNearestNavArea(owner:GetPos(), false, 10000, true, true)
