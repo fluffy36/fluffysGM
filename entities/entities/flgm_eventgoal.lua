@@ -41,7 +41,7 @@ function ENT:Use(activator, caller, useType, value)
         local effectData = EffectData()
 
         effectData:SetOrigin(self:GetPos())
-        effectData:SetScale(2)
+        effectData:SetScale(1)
         util.Effect("balloon_pop", effectData, true, nil)
 
         local ply = activator
