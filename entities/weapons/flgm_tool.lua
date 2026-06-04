@@ -171,8 +171,12 @@ function SWEP:SecondaryAttack()
     end
 end
 
+function SWEP:Think()
+	Pos = self:GetPos()
+end
 
 local Challange1Started = false
+
 
 hook.Add("Tick", "", function()
 	--I give up. this is where its gonna be. remember it runs every tick!
@@ -183,7 +187,9 @@ hook.Add("Tick", "", function()
 		print(CorruptedPropsAmount)
 		Challange1Started = true
 		GoalOnGoing = true
-		local Nav = navmesh.GetNearestNavArea(self:GetPos(), false, 10000, true, true)
+
+		print(Pos)
+		local Nav = navmesh.GetNearestNavArea(Pos, false, 10000, true, true)
 
 		if IsValid(Nav) then
 
