@@ -84,14 +84,9 @@ if SERVER then
 
         -- Gather every single physical entity, npc, or prop currently alive in the world
         local allMapEntities = ents.GetAll()
-        local validTargets = {}
+        local validTargets = GAMEMODE.SpawnedEnts
 
-        for _, ent in ipairs(allMapEntities) do
-            -- Filter out world geometry, players, and the quest-starting props themselves
-            if util.IsValidProp(ent:GetModel()) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
-                table.insert(validTargets, ent)
-            end
-        end
+        
 
         -- Safety fallback: if the map is completely empty, spawn a random object into the sky to hunt
         if #validTargets == 0 then

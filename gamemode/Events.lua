@@ -22,6 +22,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     
     local Models = {}
     local Ents = {}
+    local GAMEMODE.SpawnedEnts = {}
 
     -- 1. Scrape every registered SENT (Scripted Entity) b
     for class, _ in pairs(scripted_ents.GetList()) do
@@ -126,6 +127,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                     prop:SetModel(chosenModel)
                     prop:SetPos(RandPoint + Vector(0, 0, 2000)) -- Drop from the sky
                     prop:Spawn()
+                    table.insert(GAMEMODE.SpawnedEnts, prop)
                 end
                 
             -- ACTION 2: Spawn a Spawner Registry Class Item (NPC, SENT, Weapon, Vehicle)
@@ -161,6 +163,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                         item:SetPos(RandPoint + Vector(0, 0, 5000))
                         item:Spawn()
                         item:Activate()
+                        table.insert(GAMEMODE.SpawnedEnts, prop)
                     end
 
                 elseif objType == "weapon" then
@@ -176,6 +179,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
                         if spawnData.model then item:SetModel(spawnData.model) end
                         item:SetPos(RandPoint + Vector(0, 0, 5000))
                         item:Spawn()
+                        table.insert(GAMEMODE.SpawnedEnts, prop)
                     end
                 end
             elseif RandInt == 3 then
