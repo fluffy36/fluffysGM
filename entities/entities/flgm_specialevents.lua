@@ -10,15 +10,312 @@ if SERVER then
         CurrentPlayer = nil
     }
 
-    ---------------------------------------------------------
+   --------------------------------------------------------
     -- QUEST TARGET / REWARD BLACKLIST
     ---------------------------------------------------------
     -- Add any class names or model path snippets here to completely ignore them
     local QuestBlacklist = {
+        ["light_spot"] = true,
+        ["light_dynamic"] = true,
+        ["env_projectedtexture"] = true,
+        ["light_environment"] = true,
+        ["light_directional"] = true,
+        ["env_beam"] = true,
+        ["manipulate_flex"] = true,
+        ["path_track"] = true,
+        ["player_loadsaved"] = true,
+        ["player_speedmod"] = true,
+        ["player_weaponstrip"] = true,
         ["gmod_light"] = true,
         ["hint"] = true,
         ["light"] = true,
-        ["gmod_light"] = true,
+        ["phys_constraintsystem"] = true,
+-- Invisible Point Logic, Cameras & Command Triggers
+        ["point_anglesensor"] = true,
+        ["point_angularvelocitysensor"] = true,
+        ["point_antlion_repellant"] = true,
+        ["point_apc_controller"] = true,
+        ["point_bugbait"] = true,
+        ["point_camera"] = true,
+        ["point_clientcommand"] = true,
+        ["point_commentary_node"] = true,
+        ["point_devshot_camera"] = true,
+        ["point_enable_motion_fixup"] = true,
+        ["point_energy_ball_launcher"] = true,
+        ["point_hurt"] = true,
+        ["point_message"] = true,
+        ["point_playermoveconstraint"] = true,
+        ["point_servercommand"] = true,
+        ["point_spotlight"] = true,
+        ["point_teleport"] = true,
+        ["point_template"] = true,
+        ["point_tesla"] = true,
+        ["point_viewcontrol"] = true,
+        ["vehicle_viewcontroller"] = true,
+-- Hidden Map Trigger Volumes & Logic Zones
+        ["trigger_autosave"] = true,
+        ["trigger_brush"] = true,
+        ["trigger_changelevel"] = true,
+        ["trigger_finale"] = true,
+        ["trigger_gravity"] = true,
+        ["trigger_hurt"] = true,
+        ["trigger_impact"] = true,
+        ["trigger_look"] = true,
+        ["trigger_multiple"] = true,
+        ["trigger_once"] = true,
+        ["trigger_physics_trap"] = true,
+        ["trigger_playermovement"] = true,
+        ["trigger_portal_cleanser"] = true,
+        ["trigger_proximity"] = true,
+        ["trigger_push"] = true,
+        ["trigger_remove"] = true,
+        ["trigger_rpgfire"] = true,
+        ["trigger_soundscape"] = true,
+        ["trigger_teleport"] = true,
+        ["trigger_transition"] = true,
+        ["trigger_vphysics_motion"] = true,
+        ["trigger_waterydeath"] = true,
+        ["trigger_weapon_dissolve"] = true,
+        ["trigger_weapon_strip"] = true,
+        ["trigger_wind"] = true,
+-- Physics Constraints & Forces
+        ["phys_ballsocket"] = true,
+        ["phys_constraint"] = true,
+        ["phys_constraintsystem"] = true,
+        ["phys_convert"] = true,
+        ["phys_hinge"] = true,
+        ["phys_keepupright"] = true,
+        ["phys_lengthconstraint"] = true,
+        ["phys_magnet"] = true,
+        ["phys_motor"] = true,
+        ["phys_pulleyconstraint"] = true,
+        ["phys_ragdollconstraint"] = true,
+        ["phys_ragdollmagnet"] = true,
+        ["phys_slideconstraint"] = true,
+        ["phys_spring"] = true,
+        ["phys_thruster"] = true,
+        ["phys_torque"] = true,
+        ["physics_cannister"] = true,
+-- Special Actors, Utility Nodes & Invisible Controllers
+        ["cycler_actor"] = true,
+        ["generic_actor"] = true,
+        ["info_npc_spawn_destination"] = true,
+        ["monster_generic"] = true,
+        ["npc_apcdriver"] = true,
+        ["npc_bullseye"] = true,
+        ["npc_enemyfinder"] = true,
+        ["npc_furniture"] = true,
+        ["npc_heli_avoidbox"] = true,
+        ["npc_heli_avoidsphere"] = true,
+        ["npc_heli_nobomb"] = true,
+        ["npc_launcher"] = true,
+        ["npc_maker"] = true,
+        ["npc_missiledefense"] = true,
+        ["npc_newnpc"] = true,
+        ["npc_particlestorm"] = true,
+        ["npc_puppet"] = true,
+        ["npc_spotlight"] = true,
+        ["npc_template_maker"] = true,
+        ["npc_vehicledriver"] = true,
+ -- Map Geometry & Optimization Elements
+        ["func_areaportal"] = true,
+        ["func_areaportalwindow"] = true,
+        ["func_brush"] = true,
+        ["func_detail"] = true,
+        ["func_lod"] = true,
+        ["func_occluder"] = true,
+        ["func_viscluster"] = true,
+        ["func_wall"] = true,
+        ["func_wall_toggle"] = true,
+        ["func_reflective_glass"] = true,
+        
+        -- Interactables, Doors & Buttons
+        ["func_button"] = true,
+        ["func_rot_button"] = true,
+        ["func_door"] = true,
+        ["func_door_rotating"] = true,
+        ["func_lookdoor"] = true,
+        ["func_movelinear"] = true,
+        ["func_platrot"] = true,
+        ["func_rotating"] = true,
+        
+        -- Breakables & Physics Boxes
+        ["func_breakable"] = true,
+        ["func_breakable_surf"] = true,
+        ["func_physbox"] = true,
+        ["func_physbox_multiplayer"] = true,
+        
+        -- Ladders & Movement Systems
+        ["func_ladder"] = true,
+        ["func_ladderendpoint"] = true,
+        ["func_useableladder"] = true,
+        ["func_conveyor"] = true,
+        ["func_trackautochange"] = true,
+        ["func_trackchange"] = true,
+        ["func_tracktrain"] = true,
+        ["func_traincontrols"] = true,
+        
+        -- Gameplay Zones & Triggers
+        ["func_capturezone"] = true,
+        ["func_changeclass"] = true,
+        ["func_nobuild"] = true,
+        ["func_nogrenades"] = true,
+        ["func_proprrespawnzone"] = true,
+        ["func_regenerate"] = true,
+        ["func_respawnroom"] = true,
+        ["func_respawnroomvisualizer"] = true,
+        
+        -- Portals & Portal Volumes
+        ["func_liquidportal"] = true,
+        ["func_noportal_volume"] = true,
+        ["func_portal_bumper"] = true,
+        ["func_portal_detector"] = true,
+        ["func_portal_orientation"] = true,
+        
+        -- Environmental Effects (Func)
+        ["func_dustcloud"] = true,
+        ["func_dustmotes"] = true,
+        ["func_precipitation"] = true,
+        ["func_smokevolume"] = true,
+        ["func_water_analog"] = true,
+        
+        -- Chargers & Spawners
+        ["func_extinguishercharger"] = true,
+        ["func_healthcharger"] = true,
+        ["func_recharge"] = true,
+        ["func_combine_ball_spawner"] = true,
+        
+        -- Mounted Tanks & Emplacements
+        ["func_guntarget"] = true,
+        ["func_tank"] = true,
+        ["func_tankairboatgun"] = true,
+        ["func_tankapcrocket"] = true,
+        ["func_tanklaser"] = true,
+        ["func_tankmortar"] = true,
+        ["func_tankphyscannister"] = true,
+        ["func_tankpulselaser"] = true,
+        ["func_tankrocket"] = true,
+        ["func_tanktrain"] = true,
+        
+        -- Clip Brushes
+        ["func_clip_vphysics"] = true,
+        ["func_vehicleclip"] = true,
+        ["func_monitor"] = true,
+
+        -- Map Logic, Anchors & Target Points
+        ["info_camera_link"] = true,
+        ["info_constraint_anchor"] = true,
+        ["info_hint"] = true,
+        ["info_intermission"] = true,
+        ["info_ladder_dismount"] = true,
+        ["info_landmark"] = true,
+        ["info_lighting"] = true,
+        ["info_lighting_relative"] = true,
+        ["info_mass_center"] = true,
+        ["info_no_dynamic_shadow"] = true,
+        ["info_null"] = true,
+        ["info_observer_point"] = true,
+        ["info_target"] = true,
+        ["info_target_gunshipcrash"] = true,
+        ["info_teleporter_countdown"] = true,
+        ["info_teleport_destination"] = true,
+        ["info_snipertarget"] = true,
+        ["info_radar_target"] = true,
+        ["info_player_start"] = true,
+
+        -- Decals & Overlays
+        ["info_overlay"] = true,
+        ["info_projecteddecal"] = true,
+        ["infodecal"] = true,
+
+        -- Particle Systems & FX
+        ["info_particle_system"] = true,
+
+        -- AI Navigation Nodes
+        ["info_node"] = true,
+        ["info_node_air"] = true,
+        ["info_node_air_hint"] = true,
+        ["info_node_climb"] = true,
+        ["info_node_hint"] = true,
+        ["info_node_link"] = true,
+        ["info_node_link_controller"] = true,
+
+        -- Player & NPC Spawn Markers
+        ["info_npc_spawn_destination"] = true,
+        ["info_player_combine"] = true,
+        ["info_player_deathmatch"] = true,
+        ["info_player_logo"] = true,
+        ["info_player_rebel"] = true,
+        ["info_player_start"] = true,
+
+        -- Environmental Emitters, Screens & Post-Processing
+        ["env_ar2explosion"] = true,
+        ["env_beam"] = true,
+        ["env_beverage"] = true,
+        ["env_blood"] = true,
+        ["env_bubbles"] = true,
+        ["env_citadel_energy_core"] = true,
+        ["env_credits"] = true,
+        ["env_cubemap"] = true,
+        ["env_dustpuff"] = true,
+        ["env_effectscript"] = true,
+        ["env_embers"] = true,
+        ["env_entity_dissolver"] = true,
+        ["env_entity_igniter"] = true,
+        ["env_entity_maker"] = true,
+        ["env_explosion"] = true,
+        ["env_extinguisherjet"] = true,
+        ["env_fade"] = true,
+        ["env_fire"] = true,
+        ["env_firesensor"] = true,
+        ["env_firesource"] = true,
+        ["env_flare"] = true,
+        ["env_fog_controller"] = true,
+        ["env_funnel"] = true,
+        ["env_global"] = true,
+        ["env_gunfire"] = true,
+        ["env_headcrabcanister"] = true,
+        ["env_hudhint"] = true,
+        ["env_laser"] = true,
+        ["env_lightglow"] = true,
+        ["env_lightrail_endpoint"] = true,
+        ["env_message"] = true,
+        ["env_microphone"] = true,
+        ["env_muzzleflash"] = true,
+        ["env_particlelight"] = true,
+        ["env_particlescript"] = true,
+        ["env_physexplosion"] = true,
+        ["env_physimpact"] = true,
+        ["env_player_surface_trigger"] = true,
+        ["env_portal_credits"] = true,
+        ["env_portal_laser"] = true,
+        ["env_portal_path_track"] = true,
+        ["env_rotorshooter"] = true,
+        ["env_rotorwash"] = true,
+        ["env_screenoverlay"] = true,
+        ["env_shake"] = true,
+        ["env_shooter"] = true,
+        ["env_smokestack"] = true,
+        ["env_smoketrail"] = true,
+        ["env_spark"] = true,
+        ["env_speaker"] = true,
+        ["env_splash"] = true,
+        ["env_sprite"] = true,
+        ["env_spritetrail"] = true,
+        ["env_starfield"] = true,
+        ["env_steam"] = true,
+        ["env_sun"] = true,
+        ["env_terrainmorph"] = true,
+        ["env_texturetoggle"] = true,
+        ["env_tonemap_controller"] = true,
+        ["env_wind"] = true,
+        ["env_zoom"] = true,
+
+        -- Soundscapes
+        ["env_soundscape"] = true,
+        ["env_soundscape_proxy"] = true,
+        ["env_soundscape_triggerable"] = true,
+
         -- Example of blacklisting specific utility types or entities:
         ["edit_sun"] = true,
         ["shadow_control"] = true,
@@ -104,6 +401,11 @@ if SERVER then
                     end
                 end
 
+                -- Keep it from selecting the same exact entity if we are skipping an active quest
+                if FLGM_ActiveQuest.Active and ent == FLGM_ActiveQuest.TargetEnt then
+                    isBlacklisted = true
+                end
+
                 if not isBlacklisted then
                     table.insert(validTargets, ent)
                 end
@@ -112,7 +414,7 @@ if SERVER then
 
         -- Safety fallback: if the map is completely empty, spawn a random object into the sky to hunt
         if #validTargets == 0 then
-            ply:ChatPrint("[Quest Engine] No valid target entities found on the map! Spawn or drop something first.")
+            ply:ChatPrint("[Quest Engine] No valid alternative target entities found on the map!")
             return
         end
 
@@ -223,6 +525,29 @@ if SERVER then
                     break
                 end
             end
+        end
+    end)
+
+    ---------------------------------------------------------
+    -- CHAT SKIP COMMAND INTERCEPTOR
+    ---------------------------------------------------------
+    hook.Add("PlayerSay", "FLGM_QuestSkipCommand", function(ply, text)
+        if string.lower(text) == "/skipquest" then
+            if not FLGM_ActiveQuest.Active then
+                ply:ChatPrint("[Quest Engine] There is no active quest to skip!")
+                return ""
+            end
+
+            ply:ChatPrint("[Quest Engine] Rerolling matrix... Skipping active target: " .. FLGM_ActiveQuest.TargetName)
+            
+            -- Revert the old target back to standard look so it doesn't stay red forever
+            if IsValid(FLGM_ActiveQuest.TargetEnt) then
+                FLGM_ActiveQuest.TargetEnt:SetColor(Color(255, 255, 255, 255))
+            end
+
+            -- Pick a fresh entity target
+            StartRandomQuest(ply)
+            return "" -- Suppress from appearing globally in chat text box
         end
     end)
 end
