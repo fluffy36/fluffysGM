@@ -111,7 +111,7 @@ function SWEP:PrimaryAttack()
 	self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
     local Str = string.Split(trace.Entity:GetClass(), "_")
     --PrintTable(Str)
-    if Str[1]=="flgm" or Str[1]=="prop" then
+    if Str[1]=="flgm" then
 		if Str[1]~="flgm" and Str[2]~="corruptedprop" then
         	trace.Entity:EmitSound("friends/friend_online.wav")
 		end
