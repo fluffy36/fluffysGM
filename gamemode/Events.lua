@@ -180,7 +180,6 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
             elseif RandInt == 3 then
                 local prop = ents.Create("flgm_corruptedprop")
                 if IsValid(prop) then
-                    prop:SetModel(chosenModel)
                     prop:SetPos(RandPoint + Vector(0, 0, 70)) -- Drop from the sky
                     prop:Spawn()
                 end
