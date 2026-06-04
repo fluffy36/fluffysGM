@@ -168,4 +168,5 @@ hook.Add("Tick", "", function()
 	if CorruptedPropsAmount > 10 then
 
 	end
+	
 end)
