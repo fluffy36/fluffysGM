@@ -17,7 +17,6 @@ function ENT:Initialize()
         self:PhysicsInit(SOLID_VPHYSICS)
         self:SetSolid(SOLID_VPHYSICS)
         
-        
         self:SetMaterial("debug/debugempty.vtf")
         
         local phys = self:GetPhysicsObject()
@@ -30,12 +29,12 @@ end
 if ( SERVER ) then
     
     function ENT:OnRemove()
-       
-        if GM_REMOVING_ALL then return end
+    
         
         local currentPos = self:GetPos()
         local currentAng = self:GetAngles()
         local currentMat = self:GetMaterial()
+        local currentClass = self:GetClass() 
         
         local currentVel = Vector(0, 0, 0)
         local physObj = self:GetPhysicsObject()
@@ -45,14 +44,14 @@ if ( SERVER ) then
         
         local effectData = EffectData()
         effectData:SetOrigin(currentPos)
-        effectData:SetScale(2) 
+        effectData:SetScale(3) 
         effectData:SetMagnitude(3) 
         util.Effect("Sparks", effectData, true)
         
+        
         timer.Simple(0, function()
-            if GM_REMOVING_ALL then return end
-            
-            local backup = ents.Create("Corrupted prop")
+           
+            local backup = ents.Create(currentClass)
             if IsValid(backup) then
                 backup:SetPos(currentPos)
                 backup:SetAngles(currentAng)
@@ -66,8 +65,7 @@ if ( SERVER ) then
             end
         end)
         
-        
-        local clone1 = ents.Create(self:GetClass())
+        local clone1 = ents.Create(currentClass)
         if IsValid(clone1) then
             clone1:SetPos(currentPos + Vector(math.random(-15, 15), math.random(-15, 15), 10))
             clone1:SetAngles(currentAng)
@@ -78,7 +76,7 @@ if ( SERVER ) then
         end
 
        
-        local clone2 = ents.Create(self:GetClass())
+        local clone2 = ents.Create(currentClass)
         if IsValid(clone2) then
             clone2:SetPos(currentPos + Vector(math.random(-15, 15), math.random(-15, 15), 10))
             clone2:SetAngles(currentAng)
@@ -95,11 +93,9 @@ end
 if ( CLIENT ) then
    
     function ENT:Draw()
-        
         local r = math.abs(math.sin(RealTime() * 25) * 255)
         local g = math.abs(math.sin(RealTime() * 40) * 255) 
         local b = math.abs(math.cos(RealTime() * 33) * 255)
-        
         
         render.SetColorModulation(r / 255, g / 255, b / 255)
         self:DrawModel()
