@@ -28,7 +28,7 @@ SWEP.Secondary.Automatic = false
 SWEP.Secondary.Ammo = "none"
 
 SWEP.HoldType = "revolver"
-
+CorruptedPropsAmount = 0
 
 
 function SWEP:Initialize()
@@ -114,7 +114,7 @@ function SWEP:PrimaryAttack()
 		end
 		if Str[2]=="corruptedprop" then
 			self:EmitSound("resource/warning.wav",0)
-			_G.CorruptedPropsAmount = _G.CorruptedPropsAmount + 1
+			CorruptedPropsAmount = CorruptedPropsAmount + 1
 			if ( SERVER ) then
 				trace.Entity:Remove()
 				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
@@ -160,3 +160,11 @@ function SWEP:SecondaryAttack()
 		end
     end
 end
+
+hook.Add("Tick", "", function()
+	--I give up. this is where its gonna be. remember it runs every tick!
+	--do your stuff in here
+	if CorruptedPropsAmount > 10 then
+
+	end
+end)
