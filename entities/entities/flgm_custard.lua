@@ -14,10 +14,6 @@ function ENT:Initialize()
         self:PhysicsInit(SOLID_VPHYSICS)
         self:SetMoveType(MOVETYPE_VPHYSICS)
         self:SetSolid(SOLID_VPHYSICS)
-        
-        if not self.purpose or self.purpose == "" then
-            self.purpose = "PLEASE SET A VALID PURPOSE"
-        end
 
         local phys = self:GetPhysicsObject()
         if IsValid(phys) then
@@ -26,4 +22,19 @@ function ENT:Initialize()
 
     end
 
+end
+if ( SERVER ) then
+    function ENT:Use(activator, caller, useType, value)
+
+        local EffectData = EffectData()
+        EffectData:SetOrigin(self:GetPos())
+        EffectData:SetScale(2)
+        EffectData:SetMagnitude(5)
+        util.Effect("Sparks", EffectData, true)
+        self:EmitSound("button/blip1.wav")
+    end
+
+    hook.Add("Tick", "", function()
+        
+    end)
 end

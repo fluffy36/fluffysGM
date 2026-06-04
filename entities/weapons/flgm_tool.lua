@@ -117,11 +117,11 @@ function SWEP:PrimaryAttack()
 		local Str = string.Split(trace.Entity:GetClass(), "_")
 		--PrintTable(Str)
 		if Str[1]=="flgm" then
+			trace.Entity:Remove()
 			if Str[2]=="corruptedprop" then
 				self:EmitSound("resource/warning.wav",0)
 				CorruptedPropsAmount = CorruptedPropsAmount + 1
 				if ( SERVER ) then
-					trace.Entity:Remove()
 					if self:GetOwner():Health() < 200 then
 						self:GetOwner():SetHealth(self:GetOwner():Health()+20)
 					end
@@ -144,6 +144,7 @@ function SWEP:PrimaryAttack()
 				end
 			end
 		elseif !trace.Entity:IsWorld() then
+			
 			trace.Entity:EmitSound("friends/friend_join.wav",0)
 			if ( SERVER ) then
 				trace.Entity:Remove()
@@ -151,6 +152,7 @@ function SWEP:PrimaryAttack()
 					self:GetOwner():SetHealth(self:GetOwner():Health()+20)
 				end
 			end
+			trace.Entity:Remove()
 		end
 
 	else
