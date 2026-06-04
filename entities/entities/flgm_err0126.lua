@@ -88,7 +88,7 @@ if ( SERVER ) then
             if IsValid(phys2) then phys2:ApplyForceCenter(Vector(math.random(-200, 200), math.random(-200, 200), 300)) end
         end
         
-        self:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 75, 150)
+        self:EmitSound("glitch_sound.wav", 75, 150)
     end
 end
 
