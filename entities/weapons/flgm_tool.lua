@@ -132,14 +132,14 @@ function SWEP:PrimaryAttack()
 					wpn:Spawn()
 				end
 			end
-		else
-			trace.Entity:EmitSound("friends/message.wav")
-			if ( SERVER ) then
-				trace.Entity:Remove()
-				self:GetOwner():SetHealth(self:GetOwner():Health()+20)
-			end
 		end
-    end
+    else
+		trace.Entity:EmitSound("friends/message.wav")
+		if ( SERVER ) then
+			trace.Entity:Remove()
+			self:GetOwner():SetHealth(self:GetOwner():Health()+20)
+		end
+	end
 
 end
 
