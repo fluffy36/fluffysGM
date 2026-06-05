@@ -84,7 +84,7 @@ if SERVER then
         end
 
         self.NextUseTime = 0
-        self.CooldownDuration = 300 -- 5 minutes
+        self.CooldownDuration = 5 
     end
 
     
@@ -95,9 +95,7 @@ if SERVER then
 
         if curTime < self.NextUseTime then
             local timeLeft = math.ceil(self.NextUseTime - curTime)
-            local minutes = math.floor(timeLeft / 60)
-            local seconds = timeLeft % 60
-            activator:ChatPrint(string.format("Generator delayed wait 5 minutes"))
+            activator:ChatPrint(string.format("Generator delayed Please wait %d more seconds.", timeLeft))
             self:EmitSound("common/wpn_denyselect.wav", 70, 100)
             return
         end
