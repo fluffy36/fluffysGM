@@ -176,11 +176,12 @@ function SWEP:SecondaryAttack()
 
     local HitEnt = trace.Entity
 	HitEnt.QuestBlackListed = !HitEnt.QuestBlackListed
-
-	if HitEnt.QuestBlackListed == true then
-		self:GetOwner():PrintMessage(HUD_PRINTTALK, "Object off quest blacklist!")
-	else
-		self:GetOwner():PrintMessage(HUD_PRINTTALK, "Object on quest blacklist!")
+	if client then
+		if HitEnt.QuestBlackListed == true then
+			self:GetOwner():PrintMessage(HUD_PRINTTALK, "Object off quest blacklist!")
+		else
+			self:GetOwner():PrintMessage(HUD_PRINTTALK, "Object on quest blacklist!")
+		end
 	end
 end
 
