@@ -463,7 +463,7 @@ if SERVER then
         -- Safety fallback: if the map is completely empty, spawn a random object into the sky to hunt
         if #validTargets == 0 then
             for i,ply in pairs(player.GetAll()) do
-                ply:ChatPrint("[Quest Engine] No valid alternative target entities found on the map!")
+                ply:ChatPrint("No valid alternative target entities found on the map")
             end
             return
         end
