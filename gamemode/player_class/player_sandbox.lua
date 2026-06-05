@@ -66,10 +66,6 @@ function PLAYER:Loadout()
 	if self.Player:IsAdmin() then
 		self.Player:Give( "weapon_physgun" )
 	end
-
-	self.Player:Give( "ent_jack_gmod_ezpickaxe" )
-	self.Player:Give( "ent_jack_gmod_ezspade" )
-	self.Player:Give( "ent_jack_gmod_ezaxe" )
 	
 	self.Player:SwitchToDefaultWeapon()
 
