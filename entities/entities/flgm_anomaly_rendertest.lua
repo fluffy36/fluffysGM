@@ -19,15 +19,15 @@ function ENT:Initialize()
         self.Draw = false
         self:SetUseType(SIMPLE_USE)
 
-        self:SetNWBool("RenderCube", false)
+        local env_sun = ents.FindByClass("env_sun")
+        for i,v in pairs(env_sun) do
+            v:SetNoDraw(true)
+        end
     end
 end
 
 function ENT:Use(Activator, Caller)
     if SERVER then
-        local env_sun = ents.FindByClass("env_sun")
-        for i,v in pairs(env_sun) then
-            v:SetNoDraw(true)
-        end
+        
     end
 end

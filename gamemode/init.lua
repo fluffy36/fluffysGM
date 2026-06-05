@@ -12,6 +12,7 @@ AddCSLuaFile( "cl_hints.lua" )
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "cl_notice.lua" )
 AddCSLuaFile( "cl_search_models.lua" )
+AddCSLuaFile( "spawnmenu/spawnmenu.lua" )
 AddCSLuaFile( "cl_spawnmenu.lua" )
 AddCSLuaFile( "cl_worldtips.lua" )
 AddCSLuaFile( "persistence.lua" )
@@ -24,8 +25,8 @@ include( 'shared.lua' )
 include( 'commands.lua' )
 include( 'player.lua' )
 include( 'spawnmenu/init.lua' )
-include("Events.lua")
-include("entities/flgm_specialevents.lua")
+include( "Events.lua" )
+include( "entities/flgm_specialevents.lua" )
 --
 -- Make BaseClass available
 --
