@@ -3,7 +3,7 @@ local EventStart = false
 
 if SERVER then
     -- Configuration Settings
-    local RespawnDelay = 300 -- 5 Minutes (300 seconds)
+    local RespawnDelay = 120 -- 5 Minutes (300 seconds)
     local DropHeight = 1500  -- Sky height calculation anchor
 
     

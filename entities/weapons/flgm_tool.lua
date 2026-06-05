@@ -33,7 +33,6 @@ local CorruptedPropsAmount = 0
 
 function SWEP:Initialize()
     self:SetHoldType( self.HoldType )
-	self.ReloadingTime = 1
 end
 
 
@@ -175,48 +174,7 @@ function SWEP:SecondaryAttack()
 
 	self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
 
-	local Str = string.Split(trace.Entity:GetClass(), "_")
-    --PrintTable(Str)
-    if Str[1]=="flgm" or Str[1]=="prop" then
-        trace.Entity:EmitSound("friends/friend_online.wav")
-		if Str[1]=="prop"then
-			local phys = trace.Entity:GetPhysicsObject()
-			phys:EnableMotion(!phys:IsMotionEnabled())
-		end
-    end
-end
-
-function SWEP:Reload()
-
-	if self.ReloadingTime and CurTime() <= self.ReloadingTime then return end
- 
-	if ( self:Clip1() < self.Primary.ClipSize and self.Owner:GetAmmoCount( self.Primary.Ammo ) > 0 ) then
- 
-		self:DefaultReload( ACT_VM_RELOAD )
-                local AnimationTime = self.Owner:GetViewModel():SequenceDuration()
-                self.ReloadingTime = CurTime() + AnimationTime
-                self:SetNextPrimaryFire(CurTime() + AnimationTime)
-                self:SetNextSecondaryFire(CurTime() + AnimationTime)
- 
-	end
-
-	//if ( CLIENT ) then return end
- 
-	self:SetIronsights( false )
- 
-	// Already reloading
-	if ( self:GetNetworkedBool( "reloading", true ) ) then return end
-
-
-	local trace = self:DoToolTrace()
-	if ( !trace ) then return end
-
-	local tool = self
-	if ( !tool ) then return end
-
-	self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
-
-	local HitEnt = trace.Entity
+    local HitEnt = trace.Entity
 	HitEnt.QuestBlackListed = !HitEnt.QuestBlackListed
 
 	if HitEnt.QuestBlackListed == true then
