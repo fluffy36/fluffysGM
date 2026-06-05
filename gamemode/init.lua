@@ -27,7 +27,7 @@ include( 'spawnmenu/init.lua' )
 include( "Events.lua" )
 include( 'Exclude.lua' )
 include( 'entities/flgm_specialevents.lua' )
-include( 'entities/flgm_specialevents.lua' )
+include( 'entities/flgm_event_generatorsummoner.lua' )
 --
 -- Make BaseClass available
 --
