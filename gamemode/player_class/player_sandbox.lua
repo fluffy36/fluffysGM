@@ -63,8 +63,14 @@ function PLAYER:Loadout()
 	self.Player:Give( "flgm_tool" )
 	self.Player:Give( "none" )
 	self.Player:Give( "weapon_crowbar" )
-	self.Player:Give( "weapon_physgun" )
+	if self.Player:IsAdmin() then
+		self.Player:Give( "weapon_physgun" )
+	end
 
+	self.Player:Give( "ent_jack_gmod_ezpickaxe" )
+	self.Player:Give( "ent_jack_gmod_ezspade" )
+	self.Player:Give( "ent_jack_gmod_ezaxe" )
+	
 	self.Player:SwitchToDefaultWeapon()
 
 end

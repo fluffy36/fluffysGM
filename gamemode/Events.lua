@@ -93,7 +93,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         table.insert(Models, fallbackModel)
     end
 
-    local PropSpawnRate = 10
+    local PropSpawnRate = 30
 
     timer.Simple(10, function()
         for _, v in pairs(player.GetAll()) do

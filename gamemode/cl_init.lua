@@ -187,3 +187,10 @@ hook.Add("SpawnMenuOpen", "AdminOnlySpawnMenu", function()
     end
     return false
 end)
+
+function GM:PlayerNoClip(ply, desiredState)
+	if LocalPlayer():GetUserGroup() == "owner" or LocalPlayer():GetUserGroup() == "superadmin" then
+        return true
+    end
+    return false
+end
