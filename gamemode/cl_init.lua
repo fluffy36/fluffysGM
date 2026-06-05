@@ -179,3 +179,11 @@ function GM:NetworkEntityCreated( ent )
 	end
 
 end
+
+hook.Add("SpawnMenuOpen", "AdminOnlySpawnMenu", function()
+    -- Replace "owner" or "superadmin" with your desired admin group
+    if LocalPlayer():GetUserGroup() == "owner" or LocalPlayer():GetUserGroup() == "superadmin" then
+        return true
+    end
+    return false
+end)

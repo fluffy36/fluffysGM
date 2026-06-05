@@ -174,3 +174,4 @@ function GM:CanEditVariable( ent, ply, key, val, editor )
 	return true
 
 end
+
