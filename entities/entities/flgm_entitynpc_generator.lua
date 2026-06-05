@@ -156,7 +156,7 @@ if CLIENT then
 
         if self:GetPos():DistToSqr(LocalPlayer():GetPos()) < 250000 then 
             local size = 30 + math.sin(CurTime() * 4) * 5
-            render.SetMaterial(Material("sprites/glow04_gmod"))
+            render.SetMaterial(Material("sprites/glow04_noz_gmod"))
             render.DrawSprite(self:GetPos() + Vector(0, 0, 20), size, size, Color(0, 128, 255, 150))
         end
     end

@@ -451,27 +451,11 @@ if SERVER then
         local validTargets = {}
 
         for _, ent in ipairs(allMapEntities) do
-            if IsValid(ent) and not ent:IsPlayer() not QuestBlacklist[class] and !ent:IsWeapon() and not ent.QuestBlackListed then
+            if IsValid(ent) and not ent:IsPlayer() and not QuestBlacklist[class] and not ent:IsWeapon() and not ent.QuestBlackListed then
                 local class = ent:GetClass()
                 local model = ent:GetModel() or ""
 
-                -- Blacklist filter checks class type or if the model path includes a blacklisted phrase
-                local isBlacklisted = QuestBlacklist[class]
-                for blacklistedItem, _ in pairs(QuestBlacklist) do
-                    if string.find(model, blacklistedItem) then
-                        isBlacklisted = true
-                        break
-                    end
-                end
-
-                -- Keep it from selecting the same exact entity if we are skipping an active quest
-                if FLGM_ActiveQuest.Active and ent == FLGM_ActiveQuest.TargetEnt then
-                    isBlacklisted = true
-                end
-
-                if not isBlacklisted then
-                    table.insert(validTargets, ent)
-                end
+                table.insert(validTargets, ent)
             end
         end
 
