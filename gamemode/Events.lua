@@ -28,7 +28,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         end
     end
 
-    -- 2. Scrape Sandbox Spawnlists (Entities, NPCs, Vehicles, Weapons)
+    -- 2. Scrape Sandbox Spawnlists (Entities, NPCs, VehiclAes, Weapons)
     local spawnableEntities = list.Get("SpawnableEntities")
     if spawnableEntities then
         for class, info in pairs(spawnableEntities) do
@@ -59,7 +59,12 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         end
     end
 
+    local spawnableEntities = list.Get("SpawnableEntities")
     -- 3. Extract models from the visual spawnlists to mix with your base props
+    for i,model in pairs(spawnableEntities) do
+        table.insert(Models, table.Count(Models)+1, model)
+    end
+    --[[
     for i,v in pairs(Props_c17) do
         table.insert(Models, table.Count(Models)-1, v)
     end
@@ -75,6 +80,8 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     for i,v in pairs(Props_canal) do
         table.insert(Models, table.Count(Models)-1, v)
     end
+    ]]--
+
     -- Fallback legacy defaults in case table scraping triggers ahead of early frames
     table.insert(Ents, { type = "npc", class = "npc_helicopter" })
     table.insert(Ents, { type = "entity", class = "gmod_light" })
