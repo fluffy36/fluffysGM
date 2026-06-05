@@ -200,6 +200,14 @@ function SWEP:Reload()
  
 	end
 
+	//if ( CLIENT ) then return end
+ 
+	self:SetIronsights( false )
+ 
+	// Already reloading
+	if ( self:GetNetworkedBool( "reloading", true ) ) then return end
+
+
 	local trace = self:DoToolTrace()
 	if ( !trace ) then return end
 
