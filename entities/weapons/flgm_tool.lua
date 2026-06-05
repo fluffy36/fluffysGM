@@ -154,7 +154,9 @@ function SWEP:PrimaryAttack()
 					self:GetOwner():SetHealth(self:GetOwner():Health()+20)
 				end
 			end
-			trace.Entity:Remove()
+			if ( SERVER ) then
+				trace.Entity:Remove()
+			end
 		end
 
 	else
@@ -183,6 +185,18 @@ function SWEP:SecondaryAttack()
 			phys:EnableMotion(!phys:IsMotionEnabled())
 		end
     end
+end
+
+function SWEP:Reload()
+	local trace = self:DoToolTrace()
+	if ( !trace ) then return end
+
+	local tool = self
+	if ( !tool ) then return end
+
+	self:DoShootEffect( trace.HitPos, trace.HitNormal, trace.Entity, trace.PhysicsBone, IsFirstTimePredicted() )
+
+	
 end
 
 function SWEP:Think()
