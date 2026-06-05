@@ -33,8 +33,7 @@ local CorruptedPropsAmount = 0
 
 function SWEP:Initialize()
     self:SetHoldType( self.HoldType )
-
-	
+	self.ReloadingTime = 1
 end
 
 
@@ -188,6 +187,19 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:Reload()
+
+	if self.ReloadingTime and CurTime() <= self.ReloadingTime then return end
+ 
+	if ( self:Clip1() < self.Primary.ClipSize and self.Owner:GetAmmoCount( self.Primary.Ammo ) > 0 ) then
+ 
+		self:DefaultReload( ACT_VM_RELOAD )
+                local AnimationTime = self.Owner:GetViewModel():SequenceDuration()
+                self.ReloadingTime = CurTime() + AnimationTime
+                self:SetNextPrimaryFire(CurTime() + AnimationTime)
+                self:SetNextSecondaryFire(CurTime() + AnimationTime)
+ 
+	end
+
 	local trace = self:DoToolTrace()
 	if ( !trace ) then return end
 
