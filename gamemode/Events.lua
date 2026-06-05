@@ -123,7 +123,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
             
             -- ACTION 1: Spawn a Random Model/Prop from the client spawnlists
             if RandInt == 1 then
-                local chosenModel = Models[math.random(1, #Models)]
+                local chosenModel = Models[math.random(1, table.Count(Models))]
                 local prop = ents.Create("prop_physics")
                 if IsValid(prop) then
                     prop:SetModel(chosenModel)

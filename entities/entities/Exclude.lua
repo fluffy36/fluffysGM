@@ -1,4 +1,5 @@
-local QuestBlacklist = {
+if ( SERVER ) then
+    local QuestBlacklist = {
         ["light_spot"] = true,
         ["light_dynamic"] = true,
         ["env_projectedtexture"] = true,
