@@ -368,6 +368,13 @@ local QuestBlacklist = {
         ["shadow_control"] = true,
     }
 
-    
+    for i,ent in pairs(ents.GetAll()) do
+        ent.QuestBlackListed = false
+        for i,class in pairs(QuestBlacklist) do
+            if ent:GetClass()==class then
+                ent.QuestBlackListed = true
+            end
+        end
+    end
 
 end

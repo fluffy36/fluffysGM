@@ -451,7 +451,7 @@ if SERVER then
         local validTargets = {}
 
         for _, ent in ipairs(allMapEntities) do
-            if IsValid(ent) and not ent:IsPlayer() and ent:GetClass() ~= "worldspawn" and ent:GetClass() ~= "flgm_corruptedprop" then
+            if IsValid(ent) and not ent:IsPlayer() not QuestBlacklist[class] and !ent:IsWeapon() and not ent.QuestBlackListed then
                 local class = ent:GetClass()
                 local model = ent:GetModel() or ""
 
