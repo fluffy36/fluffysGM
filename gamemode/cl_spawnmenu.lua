@@ -1,4 +1,4 @@
-
+AddCSLuaFile( "spawnmenu/spawnmenu.lua" )
 include( "spawnmenu/spawnmenu.lua" )
 
 --[[---------------------------------------------------------
