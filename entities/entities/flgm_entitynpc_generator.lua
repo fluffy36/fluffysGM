@@ -9,26 +9,26 @@ ENT.Spawnable = true
 ENT.AdminOnly = false
 
 if SERVER then
-    local RespawnDelay = 600 
-    local DropHeight = 1500  
-
-
+    -------------------------------------------------------------------------
+    -- INTERNAL BACKEND REGISTER PARSER (Gathers Everything)
+    -------------------------------------------------------------------------
     local GeneratorBackupList = {}
 
     local function PopulateGeneratorPool()
         GeneratorBackupList = {}
 
-        
+        -- Fetch the master blacklist if it exists globally, otherwise keep a safety fallback check
+        -- (This ensures logic, triggers, and soundscapes never spawn out of the generator)
         local blocklist = QuestBlacklist or {}
 
-       
+        -- 1. Grab all Scripted Entities (SENTS)
         for class, _ in pairs(scripted_ents.GetList()) do
             if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" and not blocklist[class] and not string.find(class, "logic_") and not string.find(class, "trigger_") then
                 table.insert(GeneratorBackupList, { type = "entity", class = class })
             end
         end
 
-        
+        -- 2. Grab Sandbox Spawnable Entities
         local spawnableEntities = list.Get("SpawnableEntities")
         if spawnableEntities then
             for class, _ in pairs(spawnableEntities) do
@@ -38,7 +38,7 @@ if SERVER then
             end
         end
 
-        
+        -- 3. Grab ALL Spawnable NPCs
         local npcList = list.Get("NPC")
         if npcList then
             for class, info in pairs(npcList) do
@@ -48,6 +48,7 @@ if SERVER then
             end
         end
 
+        -- 4. Grab All Vehicles
         local vehicleList = list.Get("Vehicles")
         if vehicleList then
             for class, info in pairs(vehicleList) do
@@ -58,59 +59,14 @@ if SERVER then
         end
     end
 
-    
+    -- Run the scraper right as the map setups load
     hook.Add("Initialize", "FLGM_GeneratorPoolInit", function()
         PopulateGeneratorPool()
     end)
 
-    local function SpawnBarrelFromSky()
-        local targetPos = Vector(0, 0, 0)
-        local players = player.GetAll()
-        
-        if #players > 0 then
-            local randomPly = players[math.random(1, #players)]
-            if IsValid(randomPly) then
-                targetPos = randomPly:GetPos() + Vector(math.random(-300, 300), math.random(-300, 300), DropHeight)
-            end
-        else
-            targetPos = Vector(math.random(-500, 500), math.random(-500, 500), DropHeight)
-        end
-
-        local tr = util.TraceLine({
-            start = targetPos,
-            endpos = targetPos - Vector(0, 0, DropHeight),
-            filter = function(ent) return ent:IsWorld() end
-        })
-        
-        if tr.Hit then targetPos = tr.HitPos - Vector(0, 0, 50) end
-
-        local barrel = ents.Create("flgm_Generator")
-        if IsValid(barrel) then
-            barrel:SetPos(targetPos)
-            barrel:Spawn()
-            barrel:Activate()
-
-            barrel:EmitSound("ambient/machines/thumper_top.wav", 100, 90)
-            for _, ply in ipairs(player.GetAll()) do
-                ply:ChatPrint("mysterious generator is dropping from the sky")
-            end
-        end
-    end
-
-    hook.Add("Initialize", "FLGM_InitialGeneratorDrop", function()
-        timer.Simple(RespawnDelay, function()
-            SpawnBarrelFromSky()
-        end)
-    end)
-
-    hook.Add("EntityRemoved", "FLGM_GeneratorRespawnTracker", function(ent)
-        if ent:GetClass() == "flgm_Generator" and not ent.IsShuttingDown then
-            timer.Simple(RespawnDelay, function()
-                SpawnBarrelFromSky()
-            end)
-        end
-    end)
-
+    -------------------------------------------------------------------------
+    -- INITIALIZE ENTITY
+    -------------------------------------------------------------------------
     function ENT:Initialize()
         self:SetModel("models/props_junk/TrashDumpster02.mdl") 
         self:SetMoveType(MOVETYPE_VPHYSICS)
@@ -128,9 +84,10 @@ if SERVER then
         end
 
         self.NextUseTime = 0
-        self.CooldownDuration = 300 
+        self.CooldownDuration = 300 -- 5 minutes
     end
 
+    
     function ENT:Use(activator, caller)
         if not IsValid(activator) or not activator:IsPlayer() then return end
 
@@ -145,7 +102,7 @@ if SERVER then
             return
         end
 
-        
+        -- Check shared master list first, fall back to our local generator registry if empty
         local rewardsPool = DynamicRewardsList
         if not rewardsPool or #rewardsPool == 0 then
             if #GeneratorBackupList == 0 then PopulateGeneratorPool() end
@@ -161,7 +118,7 @@ if SERVER then
 
         local choice = rewardsPool[math.random(1, #rewardsPool)]
         
-        
+        -- Safe spacing: Give a higher offset to accommodate massive entities/NPCs spawning
         local spawnPos = self:GetPos() + Vector(0, 0, 75) 
 
         local spawnedEnt = ents.Create(choice.class)
@@ -192,10 +149,6 @@ if SERVER then
             activator:ChatPrint("Generator: Failed to manifest entity format. Cooldown refunded.")
             self.NextUseTime = curTime 
         end
-    end
-
-    function ENT:OnRemove()
-        self.IsShuttingDown = true
     end
 end
 
