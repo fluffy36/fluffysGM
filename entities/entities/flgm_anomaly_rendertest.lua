@@ -27,7 +27,20 @@ function ENT:Initialize()
 end
 
 function ENT:Use(Activator, Caller)
-    if SERVER then
-        
+    if SERVER then 
+
+    end
+end
+
+function ENT:Think()
+    Pos = self:GetPos()
+    Ang = self:GetAngles()
+end
+
+function ENT:Draw(flags)
+    if CLIENT and draw then
+        render.SetMaterial(Material("models/debug/debugwhite"))
+        local Size = 15
+        render.DrawWireframeBox(Pos, Ang, Vector(-Size,-Size,-Size), Vector(Size,Size,Size), Color( 255, 255, 255 ), false)
     end
 end

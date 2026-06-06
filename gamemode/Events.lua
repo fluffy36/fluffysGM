@@ -7,6 +7,10 @@ concommand.Add("flgm_restart_events", function(ply)
     hook.Run("PlayerInitialSpawn", ply)
 end)
 
+concommand.Add("flgm_stop_events", function(ply)
+    timer.Stop("PropSpawn")
+end)
+
 hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
     if EventStart then return end
     EventStart = true
@@ -93,7 +97,7 @@ hook.Add("PlayerInitialSpawn", "KillFirstJoinOnce", function(Ply)
         table.insert(Models, fallbackModel)
     end
 
-    local PropSpawnRate = 30
+    local PropSpawnRate = 4
 
     timer.Simple(10, function()
         for _, v in pairs(player.GetAll()) do
