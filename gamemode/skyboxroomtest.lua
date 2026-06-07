@@ -1,6 +1,6 @@
 if CLIENT then return end
 
-local ROOM_ORIGIN = Vector(50000, 50000, 50000)
+local ROOM_ORIGIN = Vector(0, 0, 12692)
 
 local function CreateWall(pos, ang, scale)
     local ent = ents.Create("prop_physics")
