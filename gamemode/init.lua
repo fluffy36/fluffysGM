@@ -28,7 +28,7 @@ include( "Events.lua" )
 include( 'entities/Exclude.lua' )
 include( 'entities/flgm_specialevents.lua' )
 include( 'entities/flgm_event_generatorsummoner.lua' )
-include( 'entities/flgm_voiddeath.lua' )
+
 
 --
 -- Make BaseClass available
