@@ -4,12 +4,14 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 ENT.PrintName = "Inbox Car"
 ENT.Category = "Fluffy's gamemode"
+ENT.Spawnable = true
 
 function ENT:Initialize()
     self:SetModel("models/props_vehicles/car004a_physics.mdl")
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
+    self:SetUseType(SIMPLE_USE)
 
     local phys = self:GetPhysicsObject()
     if IsValid(phys) then
@@ -20,7 +22,7 @@ function ENT:Initialize()
     -- Driver seat
     self.Seat = ents.Create("prop_vehicle_prisoner_pod")
     self.Seat:SetModel("models/nova/airboat_seat.mdl")
-    self.Seat:SetPos(self:LocalToWorld(Vector(5,15,40)))
+    self.Seat:SetPos(self:LocalToWorld(Vector(5,15,-10)))
     self.Seat:SetAngles(self:LocalToWorldAngles(Angle(0,-90,0)))
     self.Seat:Spawn()
     self.Seat:SetParent(self)
@@ -28,7 +30,7 @@ function ENT:Initialize()
     -- Passenger seat
     self.Seat2 = ents.Create("prop_vehicle_prisoner_pod")
     self.Seat2:SetModel("models/nova/airboat_seat.mdl")
-    self.Seat2:SetPos(self:LocalToWorld(Vector(5,-15,40)))
+    self.Seat2:SetPos(self:LocalToWorld(Vector(5,-15,-10)))
     self.Seat2:SetAngles(self:LocalToWorldAngles(Angle(0,-90,0)))
     self.Seat2:Spawn()
     self.Seat2:SetParent(self)
@@ -37,6 +39,19 @@ function ENT:Initialize()
     self.EngineSound:PlayEx(1, 50)
 
     self.NextThink = CurTime()
+    self.PassengerisAvailable=false
+    self.Passanger = nil
+    self.Driver = nil
+end
+
+function ENT:Use(activator, caller, useType, value)
+    if !self.PassengerisAvailable then
+        activator:EnterVehicle(self.Seat)
+        PassengerisAvailable=true
+    elseif PassengerisAvailable and !IsValid(GetPassenger(self.Seat2)) then
+        activator:EnterVehicle(self.Seat2)
+        self.Passanger = activator
+    end
 end
 
 function ENT:Think()
