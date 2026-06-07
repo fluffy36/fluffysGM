@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName = "Corrupted Prop Infection"
+ENT.PrintName = "corrupted prop infection"
 ENT.Author = "Lenny"
 ENT.Base = "base_gmodentity"
 ENT.Category = "Fluffy's gamemode"
@@ -12,7 +12,6 @@ if SERVER then
         self:SetMoveType(MOVETYPE_VPHYSICS)
         self:PhysicsInit(SOLID_VPHYSICS)
         self:SetSolid(SOLID_VPHYSICS)
-        
         
         self:SetMaterial("debug/debugempty")
         self.InfectionRadius = 150       
@@ -43,20 +42,17 @@ if SERVER then
                 if ent.FLGM_IsInfected then continue end
 
                 local class = ent:GetClass()
-
                 
                 if string.find(class, "logic_") or string.find(class, "trigger_") or string.find(class, "point_") then 
                     continue 
                 end
 
-                
                 ent.FLGM_IsInfected = true
-                ent.FLGM_CureHitsLeft = 5 -- needs 5 clicks with flgm_tool to remove
+                ent.FLGM_CureHitsLeft = 5 -- Needs 5 hits to get removed
                 ent.FLGM_OriginalMaterial = ent:GetMaterial() or ""
                 ent.FLGM_SourceInfectionRoot = self 
 
                 ent:SetMaterial("debug/debugempty")
-
                 ent:EmitSound("ambient/energy/spark1.wav", 65, 85)
 
                 table.insert(self.InfectedRegistry, ent)
