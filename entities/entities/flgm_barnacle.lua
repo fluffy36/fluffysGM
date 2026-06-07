@@ -23,10 +23,12 @@ function ENT:Initialize()
     self.Pulling = false
     self.Digesting = false
     self.Captured = nil
-
+    self:SetSequence("idle01")
     self:ResetSequence("idle01")
-
-    print("[Barnacle] Ready for feeding.")
+    for i,v in pairs(self:GetSequenceList()) do
+        print(v)
+    end
+    --print("[Barnacle] Ready for feeding.")
 end
 
 function ENT:CreateCaptureSeat(pos)
@@ -64,6 +66,10 @@ function ENT:Think()
 
     if self.Pulling then
         self:PullVictim()
+    end
+
+    if self:GetCycle() >= 0.99 then
+        self:ResetSequence("attack1")
     end
 
     self:NextThink(CurTime() + 0.05)
@@ -113,7 +119,7 @@ function ENT:CapturePlayer(ply)
 
     self:EmitSound("npc/barnacle/barnacle_tongue_pull1.wav")
 
-    local seq = self:LookupSequence("attack1")
+    local seq = self:LookupSequence("Slurp")
     if seq and seq > 0 then
         self:SetSequence(seq)
     end
@@ -154,7 +160,7 @@ end
 function ENT:StartDigesting()
     timer.Create(
         "BarnacleDigest_" .. self:EntIndex(),
-        2,
+        1,
         0,
         function()
             if not IsValid(self) then return end
@@ -179,17 +185,17 @@ function ENT:StartDigesting()
             self:EmitSound(table.Random(sounds))
 
             local dmg = DamageInfo()
-            dmg:SetDamage(100)
+            dmg:SetDamage(25)
             dmg:SetAttacker(IsValid(self) and self or game.GetWorld())
             dmg:SetInflictor(self)
 
             self.Captured:TakeDamageInfo(dmg)
+            self:EmitSound("npc/barnacle/barnacle_crunch"..math.random(2,3)..".wav")
         end
     )
 end
 
 function ENT:VictimDied()
-    self:EmitSound("npc/barnacle/barnacle_crunch2.wav")
 
     self.Pulling = false
     self.Digesting = false

@@ -17,8 +17,9 @@ function ENT:Initialize()
     if IsValid(phys) then
         phys:Wake()
         phys:SetMass(50000)
+        self.mass = self:GetPhysicsObject():GetMass()
     end
-
+    
     -- Driver seat
     self.Seat = ents.Create("prop_vehicle_prisoner_pod")
     self.Seat:SetModel("models/nova/airboat_seat.mdl")
@@ -42,13 +43,15 @@ function ENT:Initialize()
     self.PassengerisAvailable=false
     self.Passanger = nil
     self.Driver = nil
+
+    print(list.Get("Vehicles"))
 end
 
 function ENT:Use(activator, caller, useType, value)
     if !self.PassengerisAvailable then
         activator:EnterVehicle(self.Seat)
-        PassengerisAvailable=true
-    elseif PassengerisAvailable and !IsValid(GetPassenger(self.Seat2)) then
+        self.PassengerisAvailable=true
+    elseif self.PassengerisAvailable and !IsValid(self.Seat2:GetDriver()) then
         activator:EnterVehicle(self.Seat2)
         self.Passanger = activator
     end
@@ -66,11 +69,11 @@ function ENT:Think()
         local turbo = driver:KeyDown(IN_SPEED) and 2 or 1
 
         if driver:KeyDown(IN_FORWARD) then
-            phys:ApplyForceCenter(self:GetForward() * 50000 * turbo)
+            phys:ApplyForceCenter(self:GetForward() * 50000 * turbo * self.mass)
         end
 
         if driver:KeyDown(IN_BACK) then
-            phys:ApplyForceCenter(-self:GetForward() * 50000 * turbo)
+            phys:ApplyForceCenter(-self:GetForward() * 50000 * turbo * self.mass)
         end
 
         if driver:KeyDown(IN_MOVELEFT) then
@@ -84,6 +87,15 @@ function ENT:Think()
         if driver:KeyPressed(IN_JUMP) then
             phys:ApplyForceCenter(Vector(0,0,750000))
             self:EmitSound("physics/metal/metal_barrel_impact_hard1.wav")
+        end
+    else
+        if IsValid(self.Seat2:GetDriver()) then
+            local driver = self.Seat2:GetDriver()
+
+            driver:EnterVehicle(self.Seat)
+            self.PassengerisAvailable = true
+        else
+            self.PassengerisAvailable = false
         end
     end
 
