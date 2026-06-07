@@ -54,6 +54,15 @@ if SERVER then
         end
 
         self:StartMotionController()
+
+        --IdleSounds = {}
+
+        REP = math.random(2, 5)
+        timer.Create("idleSoundPlay", REP, 0, function()
+            if !IsValid(self) then timer.Stop("idelSoundPlay") end 
+            self:EmitSound("npc/barnacle/barnacle_pull"..math.random(1, 4)..".wav")
+        end)
+
     end
 
     function ENT:Touch(ent)
@@ -112,6 +121,7 @@ if SERVER then
                 end
 
                 self:EmitSound("npc/scanner/scanner_alert1.wav", 85, 120)
+                self:EmitSound("npc/fast_zombie/fz_scream1.wav" ,85, 80 ,2)
                 
                 self:EmitSound("ambient/machines/combine_shield_touch_loop1.wav", 75, 150)
                 self.IsAlarmPlaying = true
@@ -221,12 +231,15 @@ if SERVER then
 
         ply:EmitSound("ambient/energy/zap9.wav", 80, 100)
         self:EmitSound("npc/attack_helicopter/helicopter_advertise_start1.wav", 90, 100)
+        self:StopSound("ambient/machines/combine_shield_touch_loop1.wav")
 
         local phys = self:GetPhysicsObject()
         if IsValid(phys) then
             phys:EnableGravity(true) 
             phys:SetVelocity(Vector(math.random(-300, 300), math.random(-300, 300), math.random(-100, 100)))
         end
+
+
     end
 
     function ENT:ReleaseVictim()
@@ -295,7 +308,7 @@ if CLIENT then
             lightBrightness = 2.5
         end
 
-        render.SetMaterial(Material("sprites/glow04_gmod"))
+        render.SetMaterial(Material("sprites/glow04_noz_gmod"))
         render.DrawSprite(self:GetPos() + Vector(0, 0, 2), size, size, glowColor)
 
         local dlight = DynamicLight(self:EntIndex(), false)
