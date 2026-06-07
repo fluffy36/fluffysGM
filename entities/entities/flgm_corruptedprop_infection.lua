@@ -18,6 +18,7 @@ if SERVER then
         self.MaxInfectionRadius = 2000   
         self.RadiusGrowthRate = 15      
         self.InfectedRegistry = {}      
+        self.CureHitsLeft = 5
 
         local phys = self:GetPhysicsObject()
         if IsValid(phys) then phys:Wake() end
@@ -62,18 +63,33 @@ if SERVER then
 
     function ENT:OnRemove()
         timer.Destroy("FLGM_InfectionLoop_" .. self:EntIndex())
+        if self.FLGM_CureHitsLeft < 4 then
 
-        if self.InfectedRegistry then
-            for _, ent in ipairs(self.InfectedRegistry) do
-                if IsValid(ent) and ent.FLGM_IsInfected then
-                    ent:SetMaterial(ent.FLGM_OriginalMaterial or "")
-                    ent.FLGM_IsInfected = nil
-                    ent.FLGM_CureHitsLeft = nil
-                    ent.FLGM_SourceInfectionRoot = nil
-                    
-                    ent:EmitSound("buttons/button14.wav", 65, 120)
+            if self.InfectedRegistry then
+
+                for _, ent in ipairs(self.InfectedRegistry) do
+
+                    if IsValid(ent) and ent.FLGM_IsInfected then
+
+                        ent:SetMaterial(ent.FLGM_OriginalMaterial or "")
+                        ent.FLGM_IsInfected = nil
+                        ent.FLGM_CureHitsLeft = nil
+                        ent.FLGM_SourceInfectionRoot = nil
+                        
+                        ent:EmitSound("buttons/button14.wav", 65, 120)
+                    end
+
                 end
+
             end
+
+        else
+            local Clone = ents.Create("flgm_corruptedrpop_infection")
+            Clone:SetPos(self:GetPos())
+            Clone:SetAngles(self:GetAngles())
+            Clone.InfectedRegistry = self.InfectedRegistry
+            Clone.CureHitsLeft = self.CureHitsLeft-1
+            Clone:Spawn()
         end
     end
 end
