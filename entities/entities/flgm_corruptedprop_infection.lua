@@ -18,7 +18,7 @@ if SERVER then
         self.MaxInfectionRadius = 2000   
         self.RadiusGrowthRate = 15      
         self.InfectedRegistry = {}      
-        self.CureHitsLeft = 5
+        self.CureHitsLeft = self.CureHitsLeft or 5
 
         local phys = self:GetPhysicsObject()
         if IsValid(phys) then phys:Wake() end
@@ -63,7 +63,7 @@ if SERVER then
 
     function ENT:OnRemove()
         timer.Destroy("FLGM_InfectionLoop_" .. self:EntIndex())
-        if self.FLGM_CureHitsLeft < 4 then
+        if self.CureHitsLeft < 1 then
 
             if self.InfectedRegistry then
 
@@ -84,7 +84,7 @@ if SERVER then
             end
 
         else
-            local Clone = ents.Create("flgm_corruptedrpop_infection")
+            local Clone = ents.Create("flgm_corruptedprop_infection")
             Clone:SetPos(self:GetPos())
             Clone:SetAngles(self:GetAngles())
             Clone.InfectedRegistry = self.InfectedRegistry
