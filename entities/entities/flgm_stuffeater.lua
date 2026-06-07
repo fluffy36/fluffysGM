@@ -3,7 +3,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 
-ENT.PrintName = "Spinning Flying Thing"
+ENT.PrintName = "Mr Eater"
 ENT.Author = "Lenny"
 ENT.Category = "Fluffy's gamemode"
 ENT.Spawnable = true
