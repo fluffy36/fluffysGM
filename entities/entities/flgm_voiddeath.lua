@@ -1,3 +1,4 @@
+--[[
 if SERVER then
     -- Master Toggle States
     local IsPurgingNonStop = false
@@ -83,3 +84,5 @@ if SERVER then
         end
     end)
 end
+
+]]--

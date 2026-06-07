@@ -40,7 +40,9 @@ end
 function ENT:Draw(flags)
     if CLIENT and draw then
         render.SetMaterial(Material("models/debug/debugwhite"))
-        local Size = 15
+        local Size = 11
+        local Size2 = 7
         render.DrawWireframeBox(Pos, Ang, Vector(-Size,-Size,-Size), Vector(Size,Size,Size), Color( 255, 255, 255 ), false)
+        render.DrawWireframeBox(Pos, Ang+Angle(45,0+CurTime()*60,45), Vector(-Size2,-Size2,-Size2), Vector(Size2,Size2,Size2), Color( 255, 255, 255 ), false)
     end
 end
