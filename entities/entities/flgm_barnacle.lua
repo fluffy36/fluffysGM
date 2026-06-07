@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.PrintName = "Giant Barnacle"
-ENT.Category = "NPCs"
+ENT.Category = "Fluffy's gamemode"
 ENT.Spawnable = true
 
 function ENT:Initialize()
