@@ -402,7 +402,7 @@ if SERVER then
 
         -- 1. Grab all Scripted Entities (SENTS)
         for class, ent in pairs(scripted_ents.GetList()) do
-            if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" and not QuestBlacklist[class] and ent:IsWeapon() then
+            if class ~= "base_anim" and class ~= "base_gmodentity" and class ~= "base_ai" and not QuestBlacklist[class] then
                 table.insert(DynamicRewardsList, { type = "entity", class = class })
             end
         end

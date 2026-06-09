@@ -71,7 +71,7 @@ if SERVER then
 
                     if IsValid(ent) and ent.FLGM_IsInfected then
 
-                        ent:SetMaterial(ent.FLGM_OriginalMaterial or "")
+                        ent:SetMaterial("")
                         ent.FLGM_IsInfected = nil
                         ent.FLGM_CureHitsLeft = nil
                         ent.FLGM_SourceInfectionRoot = nil
